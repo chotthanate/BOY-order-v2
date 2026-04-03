@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>BOY | Juice & Smoothies System</title>
+    <style>
+        :root { --primary: #4CAF50; --secondary: #2196F3; --bg: #f4f7f6; --card-bg: #ffffff; --text: #333333; --danger: #f44336; }
+        * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        body { margin: 0; background-color: var(--bg); color: var(--text); padding-bottom: calc(100px + env(safe-area-inset-bottom)); -webkit-tap-highlight-color: transparent; }
+        header { background-color: var(--primary); color: white; padding: calc(15px + env(safe-area-inset-top)) 20px 15px; text-align: center; font-size: 20px; font-weight: bold; position: sticky; top: 0; z-index: 10; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        
+        /* Tab Menu */
+        .tab-menu { display: flex; background: white; box-shadow: 0 2px 4px rgba(0,0,0,0.05); position: sticky; top: calc(56px + env(safe-area-inset-top)); z-index: 9; }
+        .tab-btn { flex: 1; padding: 12px 0; border: none; background: none; font-size: 15px; color: #888; font-weight: bold; border-bottom: 3px solid transparent; cursor: pointer; }
+        .tab-btn.active { color: var(--primary); border-bottom: 3px solid var(--primary); }
+        .tab-content { display: none; padding: 15px; animation: fadeIn 0.3s; }
+        .tab-content.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        /* Product Cards */
+        .category-title { margin: 20px 0 10px; font-size: 18px; border-bottom: 2px solid #ddd; padding-bottom: 5px; color: #555; font-weight: bold; }
+        .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+        .product-card { background: var(--card-bg); border-radius: 12px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05); display: flex; flex-direction: column; justify-content: space-between; min-height: 110px; border: 1px solid #eee; overflow: hidden; }
+        .tap-zone { flex-grow: 1; display: flex; align-items: center; justify-content: center; padding: 15px 10px; }
+        .product-name { font-size: 14px; font-weight: bold; color: #333; line-height: 1.3; }
+        
+        /* Controls */
+        .controls { display: flex; align-items: center; justify-content: space-between; background: #f9f9f9; padding: 8px 12px; border-top: 1px solid #eee; }
+        .btn-minus, .btn-plus { background: #e0e0e0; border: none; width: 32px; height: 32px; border-radius: 50%; font-size: 18px; font-weight: bold; color: #555; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+        .btn-plus { background: #e8f5e9; color: var(--primary); }
+        .qty-input { width: 45px; text-align: center; font-size: 16px; font-weight: bold; color: var(--primary); border: none; background: transparent; }
+        .qty-input.zero { color: #aaa; }
+
+        /* Cart Bar */
+        .cart-bar { position: fixed; bottom: 0; left: 0; right: 0; background: white; padding: 15px 20px calc(15px + env(safe-area-inset-bottom)); box-shadow: 0 -2px 10px rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center; z-index: 20; }
+        .btn-view-cart { background: var(--primary); color: white; border: none; padding: 12px 25px; border-radius: 25px; font-size: 16px; font-weight: bold; cursor: pointer; }
+
+        /* Modal */
+        .modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 30; flex-direction: column; justify-content: flex-end; }
+        .modal-content { background: white; width: 100%; max-height: 85vh; border-radius: 20px 20px 0 0; padding: 20px; padding-bottom: calc(20px + env(safe-area-inset-bottom)); display: flex; flex-direction: column; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #ddd; padding-bottom: 15px; margin-bottom: 10px; }
+        .cart-list { overflow-y: auto; flex-grow: 1; margin-bottom: 15px; }
+        .cart-cat-group { margin-top: 15px; background: #f8f8f8; border-radius: 8px; padding: 10px; }
+        .cart-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px dashed #eee; }
+        
+        /* Action Buttons */
+        .btn-main { width: 100%; padding: 16px; border-radius: 12px; border: none; font-size: 16px; font-weight: bold; cursor: pointer; margin-bottom: 10px; color: white; transition: 0.2s; }
+        .btn-save { background: var(--secondary); }
+        .btn-save:active { background: #1976d2; }
+        .btn-clear { background: #ffebee; color: var(--danger); font-size: 14px; }
+
+        /* Receive/Return styles */
+        .status-card { background: white; padding: 15px; border-radius: 12px; margin-bottom: 10px; border: 1px solid #eee; display: flex; flex-direction: column; gap: 10px; }
+        .weight-input-box { display: flex; align-items: center; gap: 10px; background: #f0f4f8; padding: 8px; border-radius: 8px; }
+        .weight-input-field { flex: 1; border: 1px solid #ccc; border-radius: 5px; padding: 8px; text-align: center; font-size: 16px; font-weight: bold; color: var(--secondary); }
+    </style>
+</head>
+<body>
+
+<header>🥤 BOY | Juice & Smoothies</header>
+
+<div class="tab-menu">
+    <button class="tab-btn active" id="btn-order" onclick="switchTab('order')">📝 สั่งของ</button>
+    <button class="tab-btn" id="btn-receive" onclick="switchTab('receive')">📥 รับสินค้า</button>
+    <button class="tab-btn" id="btn-return" onclick="switchTab('return')">🔄 คืนของ</button>
+</div>
+
+<div id="tab-order" class="tab-content active">
+    <div id="product-container"></div>
+</div>
+
+<div id="tab-receive" class="tab-content">
+    <div id="receive-status" style="text-align: center; padding: 20px; color: #888;">
+        ยังไม่มีรายการสินค้า... กรุณาบันทึกข้อมูลที่หน้า "สั่งของ"
+    </div>
+    <div id="receive-list"></div>
+    <div id="receive-actions" style="display:none; margin-top:20px;">
+        <button class="btn-main" style="background:var(--primary)" onclick="confirmReceive()">✅ ยืนยันการรับสินค้าเข้าชีท</button>
+    </div>
+</div>
+
+<div id="tab-return" class="tab-content">
+    <div id="return-status" style="text-align: center; padding: 20px; color: #888;">
+        ข้อมูลคืนของอ้างอิงจากรายการรับสินค้า...
+    </div>
+    <div id="return-list"></div>
+    <div id="return-actions" style="display:none; margin-top:20px;">
+        <button class="btn-main" style="background:var(--danger)" onclick="confirmReturn()">🔴 ยืนยันการคืนของเข้าชีท</button>
+    </div>
+</div>
+
+<div class="cart-bar" id="cart-bar">
+    <div style="font-size: 18px; font-weight: bold;">รวม: <span id="total-qty">0</span> ชิ้น</div>
+    <button class="btn-view-cart" onclick="openCart()">ดูสรุป / บันทึก</button>
+</div>
+
+<div class="modal" id="cart-modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 style="margin:0; font-size:18px;">🛒 ตรวจสอบรายการก่อนส่ง</h2>
+            <button onclick="closeCart()" style="border:none; background:none; font-size:24px;">×</button>
+        </div>
+        <div id="cart-list" class="cart-list"></div>
+        <button class="btn-main btn-save" id="btn-cloud-send" onclick="saveAndSend()">💾 ส่งข้อมูลและบันทึกขึ้นระบบ (Cloud)</button>
+        <button class="btn-main btn-clear" onclick="clearCart()">🗑️ ล้างข้อมูลใหม่ทั้งหมด</button>
+    </div>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-app.js";
+    import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAch0s5J7zaWE--YgCRjtwzH__YYKRcfvw",
+      authDomain: "bibc-acc.firebaseapp.com",
+      projectId: "bibc-acc",
+      storageBucket: "bibc-acc.firebasestorage.app",
+      messagingSenderId: "476095491720",
+      appId: "1:476095491720:web:3a915c7b903ea83870793d"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // ระบบ Real-time Listener: ดึงข้อมูลอัตโนมัติมาโชว์ในหน้ารับสินค้า
+    const dateKey = new Date().toLocaleDateString('en-CA');
+    onSnapshot(doc(db, "daily_orders", dateKey), (doc) => {
+        if (doc.exists()) {
+            const data = doc.data().cart;
+            renderReceiveAndReturn(data);
+        }
+    });
+
+    window.db = db; window.setDoc = setDoc; window.doc = doc;
+</script>
+
+<script>
+    const categories = {
+        "🍉 ผลไม้ (ใส่กล่อง)": ["ส้ม (โหล)", "อโวคาโด (กล่อง)", "แตงโม (กล่อง)", "สับปะรด ปั่น (กล่อง)", "สับปะรด สกัด (กล่อง)", "มะพร้าว (กล่อง)", "มะม่วง (กล่อง)", "เสาวรส (ถุง)", "ขิง (กล่อง)", "กระชาย (กล่อง)", "กีวี่ (กล่อง)", "เมล่อน (กล่อง)", "แคนตาลูป (กล่อง)", "มะละกอ (กล่อง)"],
+        "🍍 ผลไม้ (โชว์)": ["แตงโม", "สับปะรด", "กล้วยดิบ", "กล้วยสุก", "แครอท", "แตงกวา", "อโวคาโด ดิบ", "อโวคาโดสุก", "แอปเปิ้ลเขียว", "แอปเปิ้ลแดง", "แก้วมังกร ใช้", "แก้วมังกรโชว์", "ฝรั่ง", "ส้ม", "เสาวรส", "เซเลอรี่", "เมล่อน", "แคนตาลูป", "ขิง", "กระชาย", "ฟักทอง"],
+        "📦 บรรจุภัณฑ์": ["แก้วขาว", "แก้วดำ", "ฝา", "หลอดไม่ห่อฟิล์ม", "หลอดห่อฟิล์ม", "หลอดไข่มุก", "สายเดี่ยว", "ถุง grab"],
+        "🥛 เครื่องดื่ม/ผง/อื่นๆ": ["น้ำมะพร้าว", "มะนาว", "โยเกิร์ต", "นมคาร์เนชั่น", "นมข้นหวาน", "น้ำเชื่อม", "นมอัลมอนด์", "ผงโกโก้", "ผงชาเขียว", "ผงชาไทย", "น้ำผึ้ง", "โค้ก", "คาราเมล"],
+        "🍬 ขนม/ท็อปปิ้ง": ["มันหนึบ", "วอลนัท", "ช็อคบอล", "เยลลี่", "ตุ๊บตั๊บ", "ไข่มุก", "โอริโอ้", "ปีโป้", "วิปครีม"]
+    };
+
+    let cart = JSON.parse(localStorage.getItem('boy_order_permanent')) || {};
+
+    function init() {
+        const container = document.getElementById('product-container');
+        container.innerHTML = '';
+        for (const [cat, items] of Object.entries(categories)) {
+            container.innerHTML += `<div class="category-title">${cat}</div>`;
+            const grid = document.createElement('div');
+            grid.className = 'grid';
+            items.forEach(item => {
+                const q = cart[item] || 0;
+                grid.innerHTML += `
+                    <div class="product-card">
+                        <div class="tap-zone" onclick="updateQty('${item}', 1)"><div class="product-name">${item}</div></div>
+                        <div class="controls">
+                            <button class="btn-minus" id="minus-${item}" onclick="updateQty('${item}', -1)" style="visibility:${q>0?'visible':'hidden'}">-</button>
+                            <input type="number" class="qty-input ${q===0?'zero':''}" id="qty-${item}" value="${q}" oninput="manualQty('${item}', this.value)">
+                            <button class="btn-plus" onclick="updateQty('${item}', 1)">+</button>
+                        </div>
+                    </div>`;
+            });
+            container.appendChild(grid);
+        }
+        updateTotal();
+    }
+
+    function updateQty(item, change) {
+        cart[item] = (cart[item] || 0) + change;
+        if (cart[item] < 0) cart[item] = 0;
+        saveLocal();
+        updateUI(item);
+    }
+
+    function manualQty(item, val) {
+        cart[item] = parseInt(val) || 0;
+        saveLocal();
+        updateUI(item);
+    }
+
+    function updateUI(item) {
+        const input = document.getElementById(`qty-${item}`);
+        if(input) {
+            input.value = cart[item];
+            input.classList.toggle('zero', cart[item] === 0);
+            document.getElementById(`minus-${item}`).style.visibility = cart[item] > 0 ? 'visible' : 'hidden';
+        }
+        updateTotal();
+        if(document.getElementById('cart-modal').style.display === 'flex') renderCartItems();
+    }
+
+    function saveLocal() { localStorage.setItem('boy_order_permanent', JSON.stringify(cart)); }
+    function updateTotal() { document.getElementById('total-qty').innerText = Object.values(cart).reduce((a, b) => a + b, 0); }
+
+    function switchTab(id) {
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById(`tab-${id}`).classList.add('active');
+        document.getElementById(`btn-${id}`).classList.add('active');
+        document.getElementById('cart-bar').style.display = id === 'order' ? 'flex' : 'none';
+    }
+
+    // --- ตะกร้าแบบแยกหมวดหมู่และแก้ไขได้ ---
+    function openCart() {
+        renderCartItems();
+        document.getElementById('cart-modal').style.display = 'flex';
+    }
+
+    function renderCartItems() {
+        const list = document.getElementById('cart-list');
+        list.innerHTML = '';
+        let hasItem = false;
+        
+        for (const [cat, items] of Object.entries(categories)) {
+            const catItems = items.filter(i => cart[i] > 0);
+            if(catItems.length > 0) {
+                hasItem = true;
+                let catHTML = `<div class="cart-cat-group"><strong>${cat}</strong>`;
+                catItems.forEach(i => {
+                    catHTML += `
+                        <div class="cart-item">
+                            <span>${i}</span>
+                            <div style="display:flex; align-items:center; gap:8px;">
+                                <button class="btn-minus" onclick="updateQty('${i}', -1)" style="width:24px; height:24px; font-size:14px; visibility:visible">-</button>
+                                <b style="width:30px; text-align:center;">${cart[i]}</b>
+                                <button class="btn-plus" onclick="updateQty('${i}', 1)" style="width:24px; height:24px; font-size:14px">+</button>
+                            </div>
+                        </div>`;
+                });
+                catHTML += `</div>`;
+                list.innerHTML += catHTML;
+            }
+        }
+        if(!hasItem) list.innerHTML = "<center style='padding:30px; color:#999'>ไม่มีสินค้าในตะกร้า</center>";
+    }
+
+    function closeCart() { document.getElementById('cart-modal').style.display = 'none'; }
+
+    // --- ระบบ Cloud + LINE Bot ---
+    async function saveAndSend() {
+        const btn = document.getElementById('btn-cloud-send');
+        const originalText = btn.innerText;
+        btn.innerText = "⏳ กำลังบันทึกและส่งข้อมูล...";
+        btn.disabled = true;
+
+        try {
+            const dateStr = new Date().toLocaleDateString('en-CA');
+            // 1. บันทึกขึ้น Cloud
+            await window.setDoc(window.doc(window.db, "daily_orders", dateStr), { cart, timestamp: new Date().toISOString() });
+            
+            // 2. จำลองการส่งเข้า LINE (เดี๋ยวคุณบอยเอา URL Webhook มาใส่ตรงนี้ครับ)
+            // fetch('URL_WEBHOOK_LINE_BOT', { method: 'POST', body: JSON.stringify({ cart, date: dateStr }) });
+
+            btn.innerText = "✅ บันทึกสำเร็จ!";
+            setTimeout(() => { 
+                btn.innerText = originalText; 
+                btn.disabled = false;
+                closeCart(); 
+                alert("บันทึกข้อมูลเรียบร้อย! ข้อมูลจะไปปรากฏที่หน้ารับสินค้าอัตโนมัติครับ");
+            }, 1500);
+        } catch (e) {
+            alert("บันทึกไม่สำเร็จ! กรุณาตรวจสอบการตั้งค่า Firebase");
+            btn.innerText = originalText; btn.disabled = false;
+        }
+    }
+
+    // --- หน้ารับสินค้าและคืนของ (Real-time) ---
+    function renderReceiveAndReturn(cloudData) {
+        const recList = document.getElementById('receive-list');
+        const retList = document.getElementById('return-list');
+        recList.innerHTML = ''; retList.innerHTML = '';
+        
+        document.getElementById('receive-status').style.display = 'none';
+        document.getElementById('return-status').style.display = 'none';
+        document.getElementById('receive-actions').style.display = 'block';
+        document.getElementById('return-actions').style.display = 'block';
+
+        for (const [cat, items] of Object.entries(categories)) {
+            const itemsInOrder = items.filter(i => cloudData[i] > 0);
+            if(itemsInOrder.length > 0) {
+                const needsWeight = cat.includes("ผลไม้");
+                itemsInOrder.forEach(i => {
+                    const cardHTML = `
+                        <div class="status-card">
+                            <div style="display:flex; justify-content:space-between">
+                                <b>${i}</b>
+                                <span>จำนวน: <b style="color:var(--primary)">${cloudData[i]}</b></span>
+                            </div>
+                            ${needsWeight ? `
+                            <div class="weight-input-box">
+                                <span>ชั่งน้ำหนัก:</span>
+                                <input type="number" class="weight-input-field" placeholder="0">
+                                <span>กรัม</span>
+                            </div>` : ''}
+                        </div>`;
+                    recList.innerHTML += cardHTML;
+                    retList.innerHTML += cardHTML; // หน้าคืนของหน้าตาเหมือนกัน
+                });
+            }
+        }
+    }
+
+    function clearCart() { if(confirm("ต้องการล้างรายการที่เลือกไว้ทั้งหมด?")) { cart = {}; saveLocal(); init(); closeCart(); } }
+    function confirmReceive() { alert("กำลังส่งข้อมูลน้ำหนักเข้า Google Sheets... (รอการเชื่อมต่อชีท)"); }
+    function confirmReturn() { alert("กำลังบันทึกรายการคืนของเข้า Google Sheets... (รอการเชื่อมต่อชีท)"); }
+
+    init();
+</script>
+</body>
+</html>
