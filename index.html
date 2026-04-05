@@ -3,12 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>BOY | Order System V2</title>
+    <title>BOY | Order System V3</title>
     <style>
         :root { --primary: #4CAF50; --primary-dark: #388E3C; --secondary: #FF9800; --bg: #F4F9F4; --card-bg: #FFFFFF; --text: #333333; --danger: #F44336; }
         * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
         body { margin: 0; background-color: var(--bg); color: var(--text); padding-bottom: calc(100px + env(safe-area-inset-bottom)); -webkit-tap-highlight-color: transparent; overflow-x: hidden;}
         header { background-color: var(--primary); color: white; padding: calc(15px + env(safe-area-inset-top)) 20px 15px; text-align: center; font-size: 20px; font-weight: bold; position: sticky; top: 0; z-index: 10; box-shadow: 0 2px 10px rgba(76,175,80,0.2); }
+        .header-icon { position: absolute; right: 15px; top: calc(12px + env(safe-area-inset-top)); font-size: 22px; cursor: pointer; background: rgba(255,255,255,0.2); border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;}
         .tab-menu { display: flex; background: white; position: sticky; top: calc(56px + env(safe-area-inset-top)); z-index: 9; border-bottom: 1px solid #eee; }
         .tab-btn { flex: 1; padding: 15px 0; border: none; background: none; font-size: 15px; color: #aaa; font-weight: bold; border-bottom: 3px solid transparent; }
         .tab-btn.active { color: var(--primary); border-bottom: 3px solid var(--primary); }
@@ -19,30 +20,31 @@
         .btn-unlock { background: var(--secondary); color: white; border: none; padding: 12px 25px; border-radius: 25px; font-weight: bold; margin-top: 15px; }
         .category-title { margin: 25px 0 12px; font-size: 18px; border-bottom: 2px solid var(--primary); padding-bottom: 5px; color: var(--primary-dark); font-weight: bold; }
         .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
-        .product-card { background: var(--card-bg); border-radius: 12px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.04); border: 1px solid #e0f2f1; overflow: hidden; }
-        .product-name { font-size: 14px; font-weight: bold; padding: 12px 5px; min-height: 50px; display: flex; align-items: center; justify-content: center; line-height: 1.3; }
+        .product-card { background: var(--card-bg); border-radius: 12px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.04); border: 1px solid #e0f2f1; overflow: hidden; display: flex; flex-direction: column; justify-content: space-between; }
+        .product-name { font-size: 14px; font-weight: bold; padding: 12px 5px; min-height: 55px; display: flex; align-items: center; justify-content: center; line-height: 1.3; color: var(--text); }
         .controls { display: flex; align-items: center; justify-content: center; background: #fdfdfd; padding: 5px; border-top: 1px solid #f0f0f0; }
         .btn-minus, .btn-plus { background: #eeeeee; border: none; width: 32px; height: 32px; border-radius: 50%; font-size: 18px; font-weight: bold; color: #666; }
         .btn-plus { background: #E8F5E9; color: var(--primary); }
-        .qty-input { width: 45px; text-align: center; font-size: 18px; font-weight: bold; color: var(--primary-dark); border: none; background: transparent; }
-        .weight-input { width: 100%; padding: 12px 10px; border: 1px solid #cfd8dc; border-radius: 6px; text-align: center; font-size: 16px; font-weight: bold; }
-        .swipe-container { position: relative; border-radius: 12px; background: var(--danger); overflow: hidden; margin-bottom: 10px; }
+        .qty-input { width: 45px; text-align: center; font-size: 18px; font-weight: bold; color: var(--primary-dark); border: none; background: transparent; outline: none; }
+        .weight-input { width: 100%; padding: 12px 10px; border: 1px solid #cfd8dc; border-radius: 6px; text-align: center; font-size: 16px; font-weight: bold; outline: none; }
+        .swipe-container { position: relative; border-radius: 12px; background: var(--danger); overflow: hidden; margin-bottom: 10px; border: 1px solid #eee; }
         .swipe-background { position: absolute; top: 0; right: 0; bottom: 0; width: 80px; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; z-index: 1; }
-        .swipe-card { background: var(--card-bg); z-index: 2; position: relative; width: 100%; }
+        .swipe-card { background: var(--card-bg); z-index: 2; position: relative; width: 100%; padding: 12px; display: flex; justify-content: space-between; align-items: center; }
         .cart-bar { position: fixed; bottom: 0; left: 0; right: 0; background: white; padding: 15px 20px calc(15px + env(safe-area-inset-bottom)); box-shadow: 0 -4px 15px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center; z-index: 20; }
         .modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 30; flex-direction: column; justify-content: flex-end; }
         .modal-content { background: white; border-radius: 20px 20px 0 0; padding: 20px; max-height: 85vh; display: flex; flex-direction: column; overflow-y: auto; }
-        .btn-main { width: 100%; padding: 16px; border-radius: 12px; border: none; font-size: 16px; font-weight: bold; margin-bottom: 10px; color: white; cursor: pointer;}
-        .search-box { position: relative; display: flex; gap: 10px; margin-bottom: 15px; }
-        .search-input { flex: 1; padding: 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 15px; }
-        .btn-add { background: var(--secondary); color: white; border: none; padding: 0 20px; border-radius: 8px; font-weight: bold; }
-        .autocomplete-items { position: absolute; border: 1px solid #d4d4d4; z-index: 99; top: 100%; left: 0; right: 80px; max-height: 200px; overflow-y: auto; background: white; }
-        .autocomplete-items div { padding: 12px; cursor: pointer; border-bottom: 1px solid #eee; }
+        .btn-main { width: 100%; padding: 16px; border-radius: 12px; border: none; font-size: 16px; font-weight: bold; margin-bottom: 10px; color: white; cursor: pointer; transition: 0.2s;}
+        .btn-main:active { transform: scale(0.98); opacity: 0.9; }
+        .form-control { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 16px; margin-bottom: 10px; }
+        .sort-btn { background: #f0f0f0; border: none; width: 30px; height: 30px; border-radius: 5px; margin: 0 2px; font-size: 14px; color: #666; }
     </style>
 </head>
 <body>
 
-<header>🥤 BOY | Order V2</header>
+<header>
+    🥤 BOY | Order V3
+    <div class="header-icon" onclick="openManageModal()">⚙️</div>
+</header>
 
 <div class="tab-menu">
     <button class="tab-btn active" id="tab-btn-order" onclick="switchTab('order')">📝 สั่งของ</button>
@@ -52,18 +54,13 @@
 
 <div id="tab-order" class="tab-content active">
     <div id="order-lock" class="tab-lock" style="display: none;">
-        <h2 style="color:var(--primary);">✅ ส่งรายการสั่งของแล้ว</h2>
+        <h2 style="color:var(--primary); margin-bottom:5px;">✅ ส่งรายการสั่งของแล้ว</h2>
         <button class="btn-unlock" onclick="unlockOrder()">✏️ แก้ไขรายการสั่งของ</button>
     </div>
     <div id="order-container"></div>
 </div>
 
 <div id="tab-receive" class="tab-content">
-    <div class="search-box">
-        <input type="text" id="receive-search" class="search-input" placeholder="พิมพ์ค้นหาสินค้าที่เพิ่มมา..." oninput="showSuggestionsRec(this.value)">
-        <div id="autocomplete-list-rec" class="autocomplete-items"></div>
-        <button class="btn-add" onclick="addReceiveItem()">เพิ่ม</button>
-    </div>
     <div id="receive-container"></div>
     <button class="btn-main" style="background:var(--primary); margin-top:20px;" onclick="confirmReceive()">✅ ยืนยันรับสินค้าเข้าชีท</button>
 </div>
@@ -73,11 +70,6 @@
         <h2 style="color:#888;">🔒 ยังไม่ได้รับสินค้า</h2>
         <button class="btn-unlock" onclick="unlockReturn()">🔓 บังคับเปิดหน้าคืนของ</button>
     </div>
-    <div class="search-box">
-        <input type="text" id="return-search" class="search-input" placeholder="พิมพ์ค้นหาสินค้าคืน..." oninput="showSuggestions(this.value)">
-        <div id="autocomplete-list" class="autocomplete-items"></div>
-        <button class="btn-add" onclick="addReturnItem()">เพิ่ม</button>
-    </div>
     <div id="return-container"></div>
     <button class="btn-main" style="background:var(--danger); margin-top:20px;" onclick="confirmReturn()">🔴 บันทึกคืนของเข้าชีท</button>
 </div>
@@ -85,6 +77,21 @@
 <div class="cart-bar" id="cart-bar">
     <div style="font-size: 18px; font-weight: bold;">รวม: <span id="total-qty" style="color:var(--primary);">0</span> ชิ้น</div>
     <button style="background:var(--primary); color:white; border:none; padding:12px 25px; border-radius:25px; font-weight:bold;" onclick="openCart()">ดูสรุป / บันทึก</button>
+</div>
+
+<div class="modal" id="manage-modal">
+    <div class="modal-content">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+            <h2 style="margin:0; color:var(--primary-dark);">⚙️ จัดการลำดับ & สินค้า</h2>
+            <button onclick="closeManageModal()" style="border:none; background:none; font-size:24px;">×</button>
+        </div>
+        <div style="margin-bottom:15px;">
+            <select id="manage-cat-select" class="form-control" onchange="renderManageList()">
+                </select>
+        </div>
+        <div id="manage-list" style="flex-grow:1; overflow-y:auto; margin-bottom:15px;"></div>
+        <p style="font-size:12px; color:#888; text-align:center;">💡 กด ⬆️⬇️ เพื่อย้ายลำดับ หรือ ปัดซ้ายเพื่อลบ</p>
+    </div>
 </div>
 
 <div class="modal" id="cart-modal">
@@ -99,7 +106,6 @@
 </div>
 
 <script>
-    // ⚠️ ลิงก์ Webhook ล่าสุดของคุณบอย
     const WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbwIWdfGNlh5x30IxBWzhp3ohv_rbRgQdJ28PTlTiNnm6iOB29sjbesni9TcWhq7nQFI/exec"; 
 </script>
 
@@ -107,25 +113,21 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-app.js";
     import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-firestore.js";
     const firebaseConfig = { apiKey: "AIzaSyAch0s5J7zaWE--YgCRjtwzH__YYKRcfvw", authDomain: "bibc-acc.firebaseapp.com", projectId: "bibc-acc", storageBucket: "bibc-acc.firebasestorage.app", messagingSenderId: "476095491720", appId: "1:476095491720:web:3a915c7b903ea83870793d" };
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
+    const app = initializeApp(firebaseConfig); const db = getFirestore(app);
     window.db = db; window.setDoc = setDoc; window.doc = doc;
-
     const dateKey = new Date().toLocaleDateString('en-CA');
-    // ดึงข้อมูลจาก Cloud มาหน้ารับสินค้าทันทีที่สั่งของเสร็จ
     onSnapshot(doc(db, "daily_orders", dateKey), (docSnap) => {
         if (docSnap.exists()) {
             let cloudCart = docSnap.data().cart;
-            Object.keys(cloudCart).forEach(item => {
-                if (cloudCart[item] > 0) { receiveQty[item] = cloudCart[item]; }
-            });
+            Object.keys(cloudCart).forEach(item => { if (cloudCart[item] > 0) receiveQty[item] = cloudCart[item]; });
             saveReceiveLocal(); renderReceive();
         }
     });
 </script>
 
 <script>
-    const activeCategories = {
+    // ฐานข้อมูลเริ่มต้น
+    let activeCategories = JSON.parse(localStorage.getItem('boy_v3_categories')) || {
         "🍉 ผลไม้ (ใส่กล่อง)": ["ส้ม (โหล)", "อโวคาโด (กล่อง)", "แตงโม (กล่อง)", "สับปะรด ปั่น (กล่อง)", "สับปะรด สกัด (กล่อง)", "มะพร้าว (กล่อง)", "มะม่วง (กล่อง)", "เสาวรส (ถุง)", "น้ำมะพร้าว (ขวด)", "น้ำมะนาว (ขวด)", "ขิง (กล่อง)", "กระชาย (กล่อง)", "กีวี่ (กล่อง)", "มะละกอ (กล่อง)", "เมลอน (กล่อง)", "แคนตาลูป (กล่อง)"],
         "🍍 ผลไม้ (โชว์)": ["แตงโม", "สับปะรด", "กล้วยดิบ", "กล้วยสุก", "แครอท", "แตงกวา", "อโวคาโด ดิบ", "อโวคาโดสุก", "แอปเปิลเขียว", "แอปเปิลแดง", "แก้วมังกรโชว์", "ฝรั่ง", "ส้ม", "เสาวรส", "เซเลอรี่", "เมล่อน", "แคนตาลูป", "ขิง", "กระชาย", "มะเขือเทศ", "เปปเปอร์มินท์", "บีทรูท", "ลูกมะพร้าว", "มะละกอ"],
         "🥛 อื่นๆ": ["โยเกิร์ต", "นมข้นจืด คาร์เนชั่น (ถุง)", "นมข้นหวาน คาร์เนชั่น (ถุง)", "น้ำเชื่อม (ถุง)", "นมอัลมอนด์", "นมอัลมอนด์อโวคาโด", "นมโอ๊ต", "น้ำผึ้ง (ขวด)", "น้ำผึ้งเบอร์รี", "โค้ก", "ติ่งฟง สตรอว์เบอร์รี", "ติ่งฟง กีวี", "คาราเมล", "โซดา (ลัง)", "M150 (แพ็ก)", "ยาคูลท์ (ขวด)", "นมหมี (แพ็ก)", "เกลือ (กระสอบ)"],
@@ -136,15 +138,15 @@
         "🍪 ท็อปปิ้ง": ["ไข่มุก", "ผงโอริโอ้บดหยาบ", "ผงโอริโอ้บดละเอียด", "โอริโอ้", "ปีโป้", "วิปครีม"],
         "☕ ผง": ["ครีมเทียม", "โกโก้", "ช็อคโกแลต", "ไมโล", "โอวัลติน", "ชาเขียว", "ชาไทย", "ชานม", "นมสด", "เผือก", "ลาเต้", "มอคค่า", "คาปูชิโน", "เอสเพรสโซ"]
     };
-    let allItemsList = []; for (let cat in activeCategories) { allItemsList = allItemsList.concat(activeCategories[cat]); }
 
-    let appState = JSON.parse(localStorage.getItem('boy_v2_appstate')) || { orderLocked: false, returnLocked: true };
-    let orderCart = JSON.parse(localStorage.getItem('boy_v2_order')) || {};
-    let receiveQty = JSON.parse(localStorage.getItem('boy_v2_receive_qty')) || {};
-    let receiveWgt = JSON.parse(localStorage.getItem('boy_v2_receive_wgt')) || {};
-    let returnQty = JSON.parse(localStorage.getItem('boy_v2_return_qty')) || {};
-    let returnWgt = JSON.parse(localStorage.getItem('boy_v2_return_wgt')) || {};
+    let appState = JSON.parse(localStorage.getItem('boy_v3_appstate')) || { orderLocked: false, returnLocked: true };
+    let orderCart = JSON.parse(localStorage.getItem('boy_v3_order')) || {};
+    let receiveQty = JSON.parse(localStorage.getItem('boy_v3_receive_qty')) || {};
+    let receiveWgt = JSON.parse(localStorage.getItem('boy_v3_receive_wgt')) || {};
+    let returnQty = JSON.parse(localStorage.getItem('boy_v3_return_qty')) || {};
+    let returnWgt = JSON.parse(localStorage.getItem('boy_v3_return_wgt')) || {};
 
+    function saveDB() { localStorage.setItem('boy_v3_categories', JSON.stringify(activeCategories)); }
     function needsWeight(item) {
         const exceptions = ["แตงโม", "สับปะรด", "กล้วยดิบ", "กล้วยสุก"];
         if (exceptions.includes(item)) return false;
@@ -152,8 +154,44 @@
         return false;
     }
 
-    function init() { renderOrder(); renderReceive(); renderReturn(); updateLocksUI(); }
+    function init() { 
+        renderOrder(); renderReceive(); renderReturn(); updateLocksUI(); 
+        const sel = document.getElementById('manage-cat-select'); sel.innerHTML = '';
+        Object.keys(activeCategories).forEach(cat => sel.innerHTML += `<option value="${cat}">${cat}</option>`);
+    }
 
+    // --- จัดลำดับ (Sort) ---
+    function moveItem(cat, index, direction) {
+        let items = activeCategories[cat];
+        let targetIndex = index + direction;
+        if (targetIndex >= 0 && targetIndex < items.length) {
+            [items[index], items[targetIndex]] = [items[targetIndex], items[index]];
+            saveDB(); renderManageList(); renderOrder();
+        }
+    }
+
+    function openManageModal() { document.getElementById('manage-modal').style.display = 'flex'; renderManageList(); }
+    function closeManageModal() { document.getElementById('manage-modal').style.display = 'none'; }
+
+    function renderManageList() {
+        const cat = document.getElementById('manage-cat-select').value;
+        const list = document.getElementById('manage-list'); list.innerHTML = '';
+        activeCategories[cat].forEach((item, idx) => {
+            list.innerHTML += `
+                <div class="swipe-container">
+                    <div class="swipe-background">🗑️ ลบ</div>
+                    <div class="swipe-card" ontouchstart="swipeStart(event)" ontouchmove="swipeMove(event)" ontouchend="swipeEnd(event, '${item}', 'manage', '${cat}')">
+                        <span style="font-weight:bold;">${item}</span>
+                        <div>
+                            <button class="sort-btn" onclick="moveItem('${cat}', ${idx}, -1)">⬆️</button>
+                            <button class="sort-btn" onclick="moveItem('${cat}', ${idx}, 1)">⬇️</button>
+                        </div>
+                    </div>
+                </div>`;
+        });
+    }
+
+    // --- ระบบสั่งของ ---
     function renderOrder() {
         const container = document.getElementById('order-container'); container.innerHTML = '';
         for (const [cat, items] of Object.entries(activeCategories)) {
@@ -161,14 +199,22 @@
             const grid = document.createElement('div'); grid.className = 'grid';
             items.forEach(item => {
                 const q = orderCart[item] || 0;
-                grid.innerHTML += `<div class="product-card"><div class="product-name" onclick="updateOrderQty('${item}', 1)">${item}</div><div class="controls"><button class="btn-minus" onclick="updateOrderQty('${item}', -1)" style="visibility:${q>0?'visible':'hidden'}">-</button><input type="number" class="qty-input" value="${q}" onchange="manualQty('${item}', this.value, 'order')" onclick="this.select()"><button class="btn-plus" onclick="updateOrderQty('${item}', 1)">+</button></div></div>`;
+                grid.innerHTML += `<div class="product-card">
+                    <div class="product-name" onclick="updateOrderQty('${item}', 1)">${item}</div>
+                    <div class="controls">
+                        <button class="btn-minus" onclick="updateOrderQty('${item}', -1)" style="visibility:${q>0?'visible':'hidden'}">-</button>
+                        <input type="number" class="qty-input" value="${q}" onchange="manualQty('${item}', this.value, 'order')" onclick="this.select()">
+                        <button class="btn-plus" onclick="updateOrderQty('${item}', 1)">+</button>
+                    </div>
+                </div>`;
             }); container.appendChild(grid);
         } updateOrderTotal();
     }
-    function updateOrderQty(item, change) { orderCart[item] = Math.max(0, (orderCart[item] || 0) + change); localStorage.setItem('boy_v2_order', JSON.stringify(orderCart)); renderOrder(); }
-    function manualQty(item, val, type) { let n = parseInt(val) || 0; if(type==='order') { orderCart[item] = n; localStorage.setItem('boy_v2_order', JSON.stringify(orderCart)); updateOrderTotal(); } else if(type==='receive') { receiveQty[item]=n; saveReceiveLocal(); } else { returnQty[item]=n; saveReturnLocal(); } }
+    function updateOrderQty(item, change) { orderCart[item] = Math.max(0, (orderCart[item] || 0) + change); localStorage.setItem('boy_v3_order', JSON.stringify(orderCart)); renderOrder(); }
+    function manualQty(item, val, type) { let n = parseInt(val) || 0; if(type==='order') { orderCart[item]=n; localStorage.setItem('boy_v3_order', JSON.stringify(orderCart)); updateOrderTotal(); } else if(type==='receive') { receiveQty[item]=n; saveReceiveLocal(); } else { returnQty[item]=n; saveReturnLocal(); } }
     function updateOrderTotal() { document.getElementById('total-qty').innerText = Object.values(orderCart).reduce((a, b) => a + b, 0); }
 
+    // --- ระบบรับสินค้า ---
     function renderReceive() {
         const container = document.getElementById('receive-container'); container.innerHTML = '';
         for (const [cat, items] of Object.entries(activeCategories)) {
@@ -178,36 +224,44 @@
                 const grid = document.createElement('div'); grid.className = 'grid';
                 catItems.forEach(item => {
                     const q = receiveQty[item] || 0; const w = receiveWgt[item] || "";
-                    grid.innerHTML += `<div class="swipe-container"><div class="swipe-background">🗑️</div><div class="swipe-card" ontouchstart="swipeStart(event)" ontouchmove="swipeMove(event)" ontouchend="swipeEnd(event, '${item}', 'receive')"><div class="product-name">${item}</div>${needsWeight(item) ? `<div style="padding:10px;"><input type="number" class="weight-input" placeholder="กรัม" value="${w}" oninput="manualWgt('${item}', this.value, 'receive')" onclick="this.select()"></div>` : `<div class="controls"><button class="btn-minus" onclick="updateRecQty('${item}', -1)">-</button><input type="number" class="qty-input" value="${q}" onchange="manualQty('${item}', this.value, 'receive')" onclick="this.select()"><button class="btn-plus" onclick="updateRecQty('${item}', 1)">+</button></div>`}</div></div>`;
+                    grid.innerHTML += `<div class="swipe-container"><div class="swipe-background">🗑️</div><div class="swipe-card" ontouchstart="swipeStart(event)" ontouchmove="swipeMove(event)" ontouchend="swipeEnd(event, '${item}', 'receive')">
+                        <div class="product-name">${item}</div>
+                        ${needsWeight(item) ? `<div style="padding:10px;"><input type="number" class="weight-input" placeholder="กรัม" value="${w}" oninput="manualWgt('${item}', this.value, 'receive')" onclick="this.select()"></div>` : `<div class="controls"><button class="btn-minus" onclick="updateRecQty('${item}', -1)">-</button><input type="number" class="qty-input" value="${q}" onchange="manualQty('${item}', this.value, 'receive')" onclick="this.select()"><button class="btn-plus" onclick="updateRecQty('${item}', 1)">+</button></div>`}
+                    </div></div>`;
                 }); container.appendChild(grid);
             }
         }
     }
     function updateRecQty(item, change) { receiveQty[item] = Math.max(0, (receiveQty[item] || 0) + change); saveReceiveLocal(); renderReceive(); }
     function manualWgt(item, val, type) { if(type==='receive') receiveWgt[item]=val; else returnWgt[item]=val; saveReceiveLocal(); saveReturnLocal(); }
-    function saveReceiveLocal() { localStorage.setItem('boy_v2_receive_qty', JSON.stringify(receiveQty)); localStorage.setItem('boy_v2_receive_wgt', JSON.stringify(receiveWgt)); }
+    function saveReceiveLocal() { localStorage.setItem('boy_v3_receive_qty', JSON.stringify(receiveQty)); localStorage.setItem('boy_v3_receive_wgt', JSON.stringify(receiveWgt)); }
 
+    // --- ระบบคืนของ ---
     function renderReturn() {
         const container = document.getElementById('return-container'); container.innerHTML = '';
         const grid = document.createElement('div'); grid.className = 'grid';
         Object.keys(returnQty).forEach(item => {
             const q = returnQty[item]; const w = returnWgt[item] || "";
-            grid.innerHTML += `<div class="swipe-container"><div class="swipe-background">🗑️</div><div class="swipe-card" ontouchstart="swipeStart(event)" ontouchmove="swipeMove(event)" ontouchend="swipeEnd(event, '${item}', 'return')"><div class="product-name">${item}</div>${needsWeight(item) ? `<div style="padding:10px;"><input type="number" class="weight-input" placeholder="กรัม" value="${w}" oninput="manualWgt('${item}', this.value, 'return')" onclick="this.select()"></div>` : `<div class="controls"><button class="btn-minus" onclick="updateRetQty('${item}', -1)">-</button><input type="number" class="qty-input" value="${q}" onchange="manualQty('${item}', this.value, 'return')" onclick="this.select()"><button class="btn-plus" onclick="updateRetQty('${item}', 1)">+</button></div>`}</div></div>`;
+            grid.innerHTML += `<div class="swipe-container"><div class="swipe-background">🗑️</div><div class="swipe-card" ontouchstart="swipeStart(event)" ontouchmove="swipeMove(event)" ontouchend="swipeEnd(event, '${item}', 'return')">
+                <div class="product-name">${item}</div>
+                ${needsWeight(item) ? `<div style="padding:10px;"><input type="number" class="weight-input" placeholder="กรัม" value="${w}" oninput="manualWgt('${item}', this.value, 'return')" onclick="this.select()"></div>` : `<div class="controls"><button class="btn-minus" onclick="updateRetQty('${item}', -1)">-</button><input type="number" class="qty-input" value="${q}" onchange="manualQty('${item}', this.value, 'return')" onclick="this.select()"><button class="btn-plus" onclick="updateRetQty('${item}', 1)">+</button></div>`}
+            </div></div>`;
         }); container.appendChild(grid);
     }
     function updateRetQty(item, change) { returnQty[item] = Math.max(0, (returnQty[item] || 0) + change); saveReturnLocal(); renderReturn(); }
-    function saveReturnLocal() { localStorage.setItem('boy_v2_return_qty', JSON.stringify(returnQty)); localStorage.setItem('boy_v2_return_wgt', JSON.stringify(returnWgt)); }
+    function saveReturnLocal() { localStorage.setItem('boy_v3_return_qty', JSON.stringify(returnQty)); localStorage.setItem('boy_v3_return_wgt', JSON.stringify(returnWgt)); }
 
+    // --- ยิง Webhook & Cloud ---
     async function saveAndSend() {
-        const btn = document.getElementById('btn-cloud-send'); btn.innerText = "กำลังบันทึก...";
+        const btn = document.getElementById('btn-cloud-send'); btn.innerText = "กำลังส่ง...";
         const payload = { action: 'order', qtyData: orderCart, categories: activeCategories };
         try {
             const dateStr = new Date().toLocaleDateString('en-CA');
             await window.setDoc(window.doc(window.db, "daily_orders", dateStr), { cart: orderCart, timestamp: new Date().toISOString() });
             const finalUrl = WEBHOOK_URL + "?t=" + new Date().getTime();
-            await fetch(finalUrl, { method: 'POST', mode: 'no-cors', cache: 'no-cache', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+            await fetch(finalUrl, { method: 'POST', mode: 'no-cors', cache: 'no-cache', body: JSON.stringify(payload) });
             alert("✅ สั่งของเรียบร้อย!"); appState.orderLocked = true; saveAppState(); updateLocksUI(); switchTab('receive'); closeCart();
-        } catch (e) { alert("ผิดพลาด: " + e.message); } finally { btn.innerText = "💾 ส่งข้อมูลและสั่งของ (Cloud)"; }
+        } catch (e) { alert("Error: " + e.message); } finally { btn.innerText = "💾 ส่งข้อมูลและสั่งของ (Cloud)"; }
     }
 
     async function confirmReceive() {
@@ -224,7 +278,7 @@
         try { await fetch(WEBHOOK_URL, { method: 'POST', body: JSON.stringify({ action: 'return', qtyData: finalData }), mode: 'no-cors' }); returnQty = {}; saveReturnLocal(); renderReturn(); alert("บันทึกสำเร็จ!"); } catch(e) { alert(e.message); }
     }
 
-    // ฟังก์ชันย่อยอื่นๆ
+    // --- ฟังก์ชันเสริม ---
     function switchTab(id) { document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active')); document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active')); document.getElementById(`tab-${id}`).classList.add('active'); document.getElementById(`tab-btn-${id}`).classList.add('active'); document.getElementById('cart-bar').style.display = id === 'order' ? 'flex' : 'none'; }
     function openCart() { 
         const list = document.getElementById('cart-list'); list.innerHTML = '';
@@ -238,22 +292,21 @@
         document.getElementById('cart-modal').style.display = 'flex'; 
     }
     function closeCart() { document.getElementById('cart-modal').style.display = 'none'; }
-    function saveAppState() { localStorage.setItem('boy_v2_appstate', JSON.stringify(appState)); }
+    function saveAppState() { localStorage.setItem('boy_v3_appstate', JSON.stringify(appState)); }
     function updateLocksUI() { document.getElementById('order-lock').style.display = appState.orderLocked ? 'flex' : 'none'; document.getElementById('return-lock').style.display = appState.returnLocked ? 'flex' : 'none'; }
     function unlockOrder() { appState.orderLocked = false; saveAppState(); updateLocksUI(); }
     function unlockReturn() { appState.returnLocked = false; saveAppState(); updateLocksUI(); }
 
     let startX = 0; function swipeStart(e) { startX = e.touches[0].clientX; e.currentTarget.style.transition = 'none'; }
     function swipeMove(e) { let diff = startX - e.touches[0].clientX; if (diff > 0) e.currentTarget.style.transform = `translateX(-${Math.min(diff, 90)}px)`; }
-    function swipeEnd(e, item, type) {
+    function swipeEnd(e, item, type, cat) {
         let diff = startX - e.changedTouches[0].clientX; e.currentTarget.style.transition = 'transform 0.3s ease';
-        if (diff > 60 && confirm(`ลบ "${item}"?`)) { if(type==='receive') { delete receiveQty[item]; saveReceiveLocal(); renderReceive(); } else { delete returnQty[item]; saveReturnLocal(); renderReturn(); } }
-        else { e.currentTarget.style.transform = `translateX(0)`; }
+        if (diff > 60 && confirm(`ลบ "${item}"?`)) { 
+            if(type==='manage') { activeCategories[cat] = activeCategories[cat].filter(i => i !== item); saveDB(); renderManageList(); renderOrder(); }
+            else if(type==='receive') { delete receiveQty[item]; saveReceiveLocal(); renderReceive(); } 
+            else { delete returnQty[item]; saveReturnLocal(); renderReturn(); } 
+        } else { e.currentTarget.style.transform = `translateX(0)`; }
     }
-    function showSuggestionsRec(val) { const list = document.getElementById('autocomplete-list-rec'); list.innerHTML = ''; if(!val) return; allItemsList.filter(i => i.toLowerCase().includes(val.toLowerCase())).forEach(match => { const div = document.createElement('div'); div.innerHTML = match; div.onclick = () => { document.getElementById('receive-search').value = match; list.innerHTML = ''; }; list.appendChild(div); }); }
-    function addReceiveItem() { const input = document.getElementById('receive-search'); const item = input.value.trim(); if (allItemsList.includes(item)) { receiveQty[item] = 0; saveReceiveLocal(); renderReceive(); input.value = ''; } }
-    function showSuggestions(val) { const list = document.getElementById('autocomplete-list'); list.innerHTML = ''; if(!val) return; allItemsList.filter(i => i.toLowerCase().includes(val.toLowerCase())).forEach(match => { const div = document.createElement('div'); div.innerHTML = match; div.onclick = () => { document.getElementById('return-search').value = match; list.innerHTML = ''; }; list.appendChild(div); }); }
-    function addReturnItem() { const input = document.getElementById('return-search'); const item = input.value.trim(); if (allItemsList.includes(item)) { returnQty[item] = 0; saveReturnLocal(); renderReturn(); input.value = ''; } }
 
     init();
 </script>
