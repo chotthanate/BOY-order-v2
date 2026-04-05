@@ -3,92 +3,354 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>BOY | Order System V2</title>
+    <title>ระบบสั่งของ สาขา 2 -> สาขา 1</title>
     <style>
-        :root { --primary: #4CAF50; --secondary: #2196F3; --bg: #f4f7f6; --card-bg: #ffffff; --text: #333333; --danger: #f44336; }
-        * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-        body { margin: 0; background-color: var(--bg); color: var(--text); padding-bottom: calc(100px + env(safe-area-inset-bottom)); -webkit-tap-highlight-color: transparent; }
-        header { background-color: var(--primary); color: white; padding: calc(15px + env(safe-area-inset-top)) 20px 15px; text-align: center; font-size: 20px; font-weight: bold; position: sticky; top: 0; z-index: 10; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        .tab-menu { display: flex; background: white; position: sticky; top: calc(56px + env(safe-area-inset-top)); z-index: 9; border-bottom: 1px solid #eee; }
-        .tab-btn { flex: 1; padding: 15px 0; border: none; background: none; font-size: 15px; color: #888; font-weight: bold; border-bottom: 3px solid transparent; }
-        .tab-btn.active { color: var(--primary); border-bottom: 3px solid var(--primary); }
-        .tab-content { display: none; padding: 15px; }
-        .tab-content.active { display: block; }
-        .category-title { margin: 20px 0 10px; font-size: 18px; border-bottom: 2px solid #ddd; padding-bottom: 5px; color: #555; font-weight: bold; }
-        .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
-        .product-card { background: var(--card-bg); border-radius: 12px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05); display: flex; flex-direction: column; justify-content: space-between; min-height: 110px; border: 1px solid #eee; overflow: hidden; }
-        .tap-zone { flex-grow: 1; display: flex; align-items: center; justify-content: center; padding: 15px 10px; }
-        .product-name { font-size: 14px; font-weight: bold; }
-        .controls { display: flex; align-items: center; justify-content: space-between; background: #f9f9f9; padding: 8px 12px; border-top: 1px solid #eee; }
-        .btn-minus, .btn-plus { background: #e0e0e0; border: none; width: 32px; height: 32px; border-radius: 50%; font-size: 18px; font-weight: bold; color: #555; }
+        :root {
+            --primary: #4CAF50;
+            --bg: #f4f7f6;
+            --card-bg: #ffffff;
+            --text: #333333;
+            --danger: #f44336;
+        }
+        * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+        body { 
+            margin: 0; background-color: var(--bg); color: var(--text); 
+            padding-bottom: calc(80px + env(safe-area-inset-bottom));
+            -webkit-tap-highlight-color: transparent;
+        }
+        header {
+            background-color: var(--primary); color: white;
+            padding: calc(15px + env(safe-area-inset-top)) 20px 15px;
+            text-align: center; font-size: 20px; font-weight: bold;
+            position: sticky; top: 0; z-index: 10; box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .container { padding: 15px; }
+        .category-title {
+            margin: 25px 0 10px; font-size: 18px; border-bottom: 2px solid #ddd; padding-bottom: 5px;
+            color: #555; font-weight: bold;
+        }
+        .grid {
+            display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;
+        }
+        
+        /* ดีไซน์การ์ดสินค้า */
+        .product-card {
+            background: var(--card-bg); border-radius: 12px;
+            text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            display: flex; flex-direction: column; justify-content: space-between;
+            min-height: 110px; border: 1px solid #eee; overflow: hidden;
+        }
+        .tap-zone {
+            flex-grow: 1; display: flex; align-items: center; justify-content: center;
+            padding: 15px 10px; cursor: pointer; transition: background 0.1s;
+        }
+        .tap-zone:active { background: #e8f5e9; } 
+        .product-name { font-size: 15px; word-break: break-word; font-weight: bold; color: #333; }
+        
+        .controls {
+            display: flex; align-items: center; justify-content: space-between;
+            background: #f9f9f9; padding: 8px 12px; border-top: 1px solid #eee;
+        }
+        .btn-minus, .btn-plus {
+            background: #e0e0e0; border: none; width: 32px; height: 32px; border-radius: 50%;
+            font-size: 18px; font-weight: bold; color: #555; display: flex; align-items: center; justify-content: center; cursor: pointer;
+        }
         .btn-plus { background: #e8f5e9; color: var(--primary); }
-        .qty-input { width: 45px; text-align: center; font-size: 16px; font-weight: bold; color: var(--primary); border: none; background: transparent; }
-        .cart-bar { position: fixed; bottom: 0; left: 0; right: 0; background: white; padding: 15px 20px calc(15px + env(safe-area-inset-bottom)); box-shadow: 0 -2px 10px rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center; z-index: 20; }
-        .modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 30; flex-direction: column; justify-content: flex-end; }
-        .modal-content { background: white; border-radius: 20px 20px 0 0; padding: 20px; max-height: 85vh; display: flex; flex-direction: column; }
-        .cart-list { overflow-y: auto; flex-grow: 1; }
-        .btn-main { width: 100%; padding: 16px; border-radius: 12px; border: none; font-size: 16px; font-weight: bold; margin-bottom: 10px; color: white; }
-        .status-card { background: white; padding: 15px; border-radius: 12px; margin-bottom: 10px; border: 1px solid #eee; }
-        .weight-input { width: 80px; padding: 8px; border: 1px solid #ccc; border-radius: 6px; text-align: center; font-weight: bold; }
+        .btn-minus:active, .btn-plus:active { transform: scale(0.9); }
+        
+        /* สไตล์ช่องพิมพ์ตัวเลข */
+        .qty-input {
+            width: 45px; text-align: center; font-size: 16px; font-weight: bold;
+            color: var(--primary); border: none; background: transparent; padding: 5px 0;
+            -webkit-appearance: none; appearance: none; outline: none;
+        }
+        .qty-input:focus { border-bottom: 2px solid var(--primary); border-radius: 0; }
+        .qty-input.zero { color: #aaa; }
+        
+        /* ตะกร้าสินค้า */
+        .cart-bar {
+            position: fixed; bottom: 0; left: 0; right: 0;
+            background: white; padding: 15px 20px calc(15px + env(safe-area-inset-bottom));
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1); display: flex; justify-content: space-between;
+            align-items: center; z-index: 20;
+        }
+        .cart-total { font-size: 18px; font-weight: bold; }
+        .btn-view-cart {
+            background: var(--primary); color: white; border: none; padding: 12px 25px;
+            border-radius: 25px; font-size: 16px; font-weight: bold; cursor: pointer;
+        }
+
+        /* Modal สรุปรายการ */
+        .modal {
+            display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5); z-index: 30;
+            flex-direction: column; justify-content: flex-end;
+        }
+        .modal-content {
+            background: white; width: 100%; max-height: 85vh;
+            border-radius: 20px 20px 0 0; padding: 20px; padding-bottom: calc(20px + env(safe-area-inset-bottom));
+            display: flex; flex-direction: column;
+        }
+        .modal-header {
+            display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 1px solid #ddd; padding-bottom: 15px; margin-bottom: 15px;
+        }
+        .modal-header h2 { margin: 0; font-size: 20px; }
+        .close-btn { font-size: 24px; color: #888; border: none; background: none; }
+        .cart-list { overflow-y: auto; flex-grow: 1; margin-bottom: 20px; }
+        .cart-item {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 10px 0; border-bottom: 1px dashed #eee;
+        }
+        .cart-item-name { flex-grow: 1; font-size: 16px; }
+        .cart-item-controls { display: flex; align-items: center; gap: 10px; }
+        .modal-actions { display: grid; grid-template-columns: 1fr 2fr; gap: 10px; }
+        .btn-clear { background: #ffebee; color: var(--danger); border: none; padding: 15px; border-radius: 12px; font-weight: bold; font-size: 16px; }
+        .btn-copy { background: var(--primary); color: white; border: none; padding: 15px; border-radius: 12px; font-weight: bold; font-size: 16px; }
     </style>
 </head>
 <body>
 
-<header>🥤 BOY | Order V2</header>
+<header>📝 สั่งของเข้าร้าน</header>
 
-<div class="tab-menu">
-    <button class="tab-btn active" id="tab-btn-order" onclick="switchTab('order')">📝 สั่งของ</button>
-    <button class="tab-btn" id="tab-btn-receive" onclick="switchTab('receive')">📥 รับสินค้า</button>
-    <button class="tab-btn" id="tab-btn-return" onclick="switchTab('return')">🔄 คืนของ</button>
-</div>
+<div class="container" id="product-container"></div>
 
-<div id="tab-order" class="tab-content active"><div id="product-container"></div></div>
-<div id="tab-receive" class="tab-content"><div id="receive-list"></div></div>
-<div id="tab-return" class="tab-content"><div id="return-list"></div></div>
-
-<div class="cart-bar" id="cart-bar">
-    <div style="font-size: 18px; font-weight: bold;">รวม: <span id="total-qty">0</span> ชิ้น</div>
-    <button style="background:var(--primary); color:white; border:none; padding:12px 25px; border-radius:25px; font-weight:bold;" onclick="openCart()">ดูสรุป / บันทึก</button>
+<div class="cart-bar">
+    <div class="cart-total">รวม: <span id="total-qty">0</span> ชิ้น</div>
+    <button class="btn-view-cart" onclick="openCart()">ดูสรุป / คัดลอกส่ง</button>
 </div>
 
 <div class="modal" id="cart-modal">
     <div class="modal-content">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-            <h2 style="margin:0">🛒 ตรวจสอบรายการ</h2>
-            <button onclick="closeCart()" style="border:none; background:none; font-size:24px;">×</button>
+        <div class="modal-header">
+            <h2>🛒 สรุปรายการสั่งของ</h2>
+            <button class="close-btn" onclick="closeCart()">✖</button>
         </div>
-        <div id="cart-list" class="cart-list"></div>
-        <button class="btn-main" style="background:var(--secondary)" onclick="saveAndSend()">💾 ส่งข้อมูลและบันทึก (Cloud)</button>
-        <button class="btn-main" style="background:#ffebee; color:var(--danger)" onclick="clearCart()">🗑️ ล้างทั้งหมด</button>
+        <div class="cart-list" id="cart-list"></div>
+        <div class="modal-actions">
+            <button class="btn-clear" onclick="clearCart()">ล้างข้อมูล</button>
+            <button class="btn-copy" onclick="copyToClipboard()">📋 คัดลอกส่ง LINE</button>
+        </div>
     </div>
 </div>
 
-<script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-app.js";
-    import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-firestore.js";
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyAch0s5J7zaWE--YgCRjtwzH__YYKRcfvw",
-      authDomain: "bibc-acc.firebaseapp.com",
-      projectId: "bibc-acc",
-      storageBucket: "bibc-acc.firebasestorage.app",
-      messagingSenderId: "476095491720",
-      appId: "1:476095491720:web:3a915c7b903ea83870793d"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-    const dateKey = new Date().toLocaleDateString('en-CA');
-
-    // ระบบดึงข้อมูลจาก Cloud มาโชว์หน้า "รับสินค้า" อัตโนมัติ
-    onSnapshot(doc(db, "daily_orders", dateKey), (docSnap) => {
-        if (docSnap.exists()) renderStatusPages(docSnap.data().cart);
-    });
-
-    window.db = db; window.setDoc = setDoc; window.doc = doc;
-</script>
-
 <script>
     const categories = {
-        "🍉 ผลไม้ (ใส่กล่อง)": ["ส้ม (โหล)", "อโวคาโด (กล่อง)", "แตงโม (กล่อง)", "สับปะรด ปั่น", "สับปะรด สกัด", "มะพร้าว (กล่อง)", "มะม่วง (กล่อง)", "เสาวรส (ถุง)", "ขิง (กล่อง)", "กระชาย (กล่อง)", "กีวี่ (กล่อง)", "เมล่อน (กล่อง)", "แคนตาลูป (กล่อง)", "มะละกอ (กล่อง)"],
-        "🍍 ผลไม้ (โชว์)": ["
+        "🍉 ผลไม้ (ใส่กล่อง)": [
+            "ส้ม (โหล)", "อโวคาโด (กล่อง)", "แตงโม (กล่อง)", "สับปะรด ปั่น (กล่อง)", "สับปะรด สกัด (กล่อง)", "มะพร้าว (กล่อง)", "มะม่วง (กล่อง)", "เสาวรส (ถุง)", "ขิง (กล่อง)", "กระชาย (กล่อง)", "กีวี่ (กล่อง)", "เมล่อน (กล่อง)", "แคนตาลูป (กล่อง)", "มะละกอ (กล่อง)"
+        ],
+        "🍍 ผลไม้ (โชว์)": [
+            "แตงโม", "สับปะรด", "กล้วยดิบ", "กล้วยสุก", "แครอท", "แตงกวา", "อโวคาโด ดิบ", "อโวคาโดสุก", "แอปเปิ้ลเขียว", "แอปเปิ้ลแดง", "แก้วมังกร ใช้", "แก้วมังกรโชว์", "ฝรั่ง", "ส้ม", "เสาวรส", "เซเลอรี่", "เมล่อน", "แคนตาลูป", "ขิง", "กระชาย", "ฟักทอง"
+        ],
+        "🥛 อื่นๆ": [
+            "น้ำมะพร้าว", "มะนาว", "โยเกิร์ต", "นมข้นจืด คาร์เนชั่น", "นมข้นหวาน", "น้ำเชื่อม", "นมอัลมอนด์", "นมอัลมอนด์อโวคาโด", "นมโอ๊ต", "น้ำผึ้ง (ขวด)", "น้ำผึ้งเบอร์รี่", "โค้ก", "ติ่งฟง สตรอว์เบอร์รี่", "ติ่งฟง กีวี่", "คาราเมล"
+        ],
+        "🥫 ผลไม้อบแห้งกระปุก": [
+            "ลูกพรุน (ฝาแดง)", "กีวี่ (ฝาแดง)", "ลูกไน๋เชื่อม (ฝาแดง)", "บ๊วย 5 รส (ฝาแดง)", "บ๊วยเค็ม (ฝาแดง)", "บ๊วยชิ้น (ฝาแดง)", "เชอร์รี่ (ฝาแดง)", "มะเขือเทศ (ฝาแดง)", "มะม่วงหยี", "มะขามจี๊ดจ๊าด", "สับปะรดอบ", "มะนาว อบแห้ง", "มะละกอ อบแห้ง", "ลูกพรุนหวาน (ฝาม่วง)", "ลูกไหนแช่อิ่ม (ฝาเขียว)", "ลูกพลัมอบแห้ง (ฝาเขียว)", "บ๊วยชิ้นอบแห้ง (ฝาชมพู)", "บ๊วยอบแห้งรสสตรอเบอร์รี่ (ฝาชมพู)", "บ๊วยรสน้ำผึ้ง (ฝาชมพู)", "บ๊วยเค็ม (ฝาเขียว)", "บ๊วยรสหวาน (ฝาม่วง)", "บ๊วยห้ารส (ฝาเขียว)", "มะเขือราชินีอบแห้ง (ฝาเขียว)", "มะขาม 3 รส (ฝาเขียว)", "มะขามป้อมแช่อิ่ม (ฝาเขียว)", "เชอร์รี่แช่อิ่ม (ฝาเขียว)", "เชอร์รี่อบแห้ง (ฝาม่วง)"
+        ],
+        "🍬 ขนม": [
+            "มันหนึบ", "วอลนัท", "แครนเบอร์รี่ชีส (10 บาท)", "ช็อคบอล", "เยลลี่ผลไม้", "บ๊วย 2 บาท", "ตุ๊บตั๊บ", "ท้อแดง 3 บาท", "ข้าวโอ๊ต", "นูกัต", "บิสกิตแบน 4 บาท", "ปีโป้กรอบ", "เยลลี่"
+        ],
+        "❄️ ผลไม้แช่แข็ง": [
+            "มิกซ์เบอร์รี่", "สตรอว์เบอร์รี่", "บลูเบอร์รี่", "ลิ้นจี่", "ลำไย", "ราสเบอร์รี่", "แครนเบอร์รี่", "มัลเบอร์รี่"
+        ],
+        "📦 บรรจุภัณฑ์": [
+            "แก้วขาว", "แก้วดำ", "ฝา", "หลอดไม่ห่อฟิล์ม", "หลอดห่อฟิล์ม", "หลอดไข่มุก ห่อฟิล์ม สีดำ", "สายเดี่ยว", "ถุง grab"
+        ],
+        "🍪 ท็อปปิ้ง": [
+            "ไข่มุก", "ผลโอริโอ้บดหยาบ", "โอริโอ้", "ปีโป้", "วิปครีม"
+        ],
+        "☕ ผง": [
+            "ครีมเทียม", "โกโก้", "ช็อคโกแลต", "ไมโล", "โอวัลติน", "ชาเขียว", "ชาไทย", "ชานม", "นมสด", "เผือก", "ลาเต้", "มอคค่า", "คาปูชิโน", "เอสเพรสโซ"
+        ]
+    };
+
+    // ตั้งค่าเริ่มต้น (Default) ให้สินค้าเหล่านี้มีจำนวน 1 ตอนเปิดแอป
+    let cart = {
+        "ส้ม (โหล)": 1,
+        "สับปะรด ปั่น (กล่อง)": 1,
+        "สับปะรด สกัด (กล่อง)": 1,
+        "แตงโม (กล่อง)": 1,
+        "มะพร้าว (กล่อง)": 1,
+        "มะม่วง (กล่อง)": 1
+    };
+
+    function init() {
+        const container = document.getElementById('product-container');
+        for (const [catName, items] of Object.entries(categories)) {
+            const title = document.createElement('div');
+            title.className = 'category-title';
+            title.innerText = catName;
+            container.appendChild(title);
+
+            const grid = document.createElement('div');
+            grid.className = 'grid';
+
+            items.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'product-card';
+
+                // เช็กว่ามีค่าเริ่มต้นไว้ไหม ถ้ามีให้แสดงปุ่มลบและตัวเลขเลย
+                const currentQty = cart[item] || 0;
+                const visibility = currentQty > 0 ? 'visible' : 'hidden';
+                const zeroClass = currentQty === 0 ? 'zero' : '';
+
+                card.innerHTML = `
+                    <div class="tap-zone" onclick="updateQty('${item}', 1)">
+                        <div class="product-name">${item}</div>
+                    </div>
+                    <div class="controls" onclick="event.stopPropagation()">
+                        <button class="btn-minus" id="minus-${item}" onclick="updateQty('${item}', -1)" style="visibility: ${visibility};">-</button>
+                        <input type="number" inputmode="numeric" class="qty-input ${zeroClass}" id="qty-${item}" value="${currentQty}" 
+                            onclick="event.stopPropagation()" 
+                            oninput="typeQty('${item}', this.value)" 
+                            onblur="formatQty('${item}')">
+                        <button class="btn-plus" onclick="updateQty('${item}', 1)">+</button>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+            container.appendChild(grid);
+        }
+        updateTotal(); // อัปเดตยอดรวมด้านล่างสุดทันทีตอนเปิดแอป
+    }
+
+    function updateQty(item, change) {
+        if (!cart[item]) cart[item] = 0;
+        cart[item] += change;
+        if (cart[item] < 0) cart[item] = 0;
+        updateUI(item);
+    }
+
+    function typeQty(item, value) {
+        if (value === '') {
+            cart[item] = 0;
+        } else {
+            let val = parseInt(value);
+            if (isNaN(val) || val < 0) val = 0;
+            cart[item] = val;
+        }
+        updateTotal();
+        
+        const minusBtn = document.getElementById(`minus-${item}`);
+        if(minusBtn) minusBtn.style.visibility = cart[item] > 0 ? 'visible' : 'hidden';
+        
+        if(document.getElementById('cart-modal').style.display === 'flex') {
+            renderCartItems();
+        }
+    }
+
+    function formatQty(item) {
+        updateUI(item);
+    }
+
+    function updateUI(item) {
+        const input = document.getElementById(`qty-${item}`);
+        const minusBtn = document.getElementById(`minus-${item}`);
+        if(input) {
+            input.value = cart[item] || 0;
+            if (cart[item] > 0) {
+                input.classList.remove('zero');
+                minusBtn.style.visibility = 'visible';
+            } else {
+                input.classList.add('zero');
+                minusBtn.style.visibility = 'hidden';
+            }
+        }
+        updateTotal();
+        
+        if(document.getElementById('cart-modal').style.display === 'flex') {
+            renderCartItems();
+        }
+    }
+
+    function updateTotal() {
+        const total = Object.values(cart).reduce((sum, val) => sum + val, 0);
+        document.getElementById('total-qty').innerText = total;
+    }
+
+    function openCart() {
+        renderCartItems();
+        document.getElementById('cart-modal').style.display = 'flex';
+    }
+
+    function closeCart() {
+        document.getElementById('cart-modal').style.display = 'none';
+        for (const item in cart) { updateUI(item); }
+    }
+
+    function renderCartItems() {
+        const list = document.getElementById('cart-list');
+        list.innerHTML = '';
+        let hasItems = false;
+
+        for (const [catName, items] of Object.entries(categories)) {
+            const catItems = items.filter(item => cart[item] > 0);
+            if (catItems.length > 0) {
+                hasItems = true;
+                list.innerHTML += `<div style="font-weight:bold; color:#555; margin-top:15px;">${catName}</div>`;
+                catItems.forEach(item => {
+                    list.innerHTML += `
+                        <div class="cart-item">
+                            <div class="cart-item-name">${item}</div>
+                            <div class="cart-item-controls">
+                                <button class="btn-minus" onclick="updateQty('${item}', -1)">-</button>
+                                <input type="number" inputmode="numeric" class="qty-input" value="${cart[item]}" 
+                                    oninput="typeQty('${item}', this.value)" 
+                                    onblur="formatQty('${item}')">
+                                <button class="btn-plus" onclick="updateQty('${item}', 1)">+</button>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+        }
+        if (!hasItems) list.innerHTML = '<div style="text-align:center; color:#888; margin-top:30px;">ยังไม่ได้เลือกสินค้า</div>';
+    }
+
+    function clearCart() {
+        if(confirm("ต้องการล้างรายการทั้งหมดใช่หรือไม่?")) {
+            for (const item in cart) { cart[item] = 0; updateUI(item); }
+            cart = {};
+            closeCart();
+        }
+    }
+
+    function copyToClipboard() {
+        const total = Object.values(cart).reduce((sum, val) => sum + val, 0);
+        if (total === 0) {
+            alert("กรุณาเลือกสินค้าก่อนคัดลอกครับ");
+            return;
+        }
+
+        const date = new Date().toLocaleDateString('th-TH');
+        let text = `📦 รายการสั่งของ Big C (${date})\n\n`;
+
+        for (const [catName, items] of Object.entries(categories)) {
+            const catItems = items.filter(item => cart[item] > 0);
+            if (catItems.length > 0) {
+                text += `${catName}\n`;
+                catItems.forEach(item => {
+                    text += `- ${item} x ${cart[item]}\n`;
+                });
+                text += `\n`;
+            }
+        }
+
+        navigator.clipboard.writeText(text).then(() => {
+            const btn = document.querySelector('.btn-copy');
+            btn.innerText = "✅ คัดลอกสำเร็จแล้ว!";
+            btn.style.background = "#4CAF50";
+            setTimeout(() => {
+                btn.innerText = "📋 คัดลอกส่ง LINE";
+                btn.style.background = "var(--primary)";
+            }, 2000);
+        }).catch(err => {
+            alert("ไม่สามารถคัดลอกได้โดยอัตโนมัติ กรุณาเลือกข้อความแล้วกดคัดลอกเองครับ");
+        });
+    }
+
+    init();
+</script>
+</body>
+</html>
