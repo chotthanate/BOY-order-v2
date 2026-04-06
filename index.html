@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>BOY | Order System V3.7</title>
+    <title>BOY | Order System V3.8</title>
     <style>
         :root { --primary: #4CAF50; --primary-dark: #388E3C; --secondary: #FF9800; --bg: #F4F9F4; --card-bg: #FFFFFF; --text: #333333; --danger: #F44336; }
         * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
@@ -16,7 +16,8 @@
         .tab-content { display: none; padding: 15px; animation: fadeIn 0.3s; position: relative; min-height: 70vh; }
         .tab-content.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
-        .tab-lock { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(2px); z-index: 15; display: flex; flex-direction: column; align-items: center; padding-top: 60px; text-align: center; border-radius: 12px; }
+        /* หน้า Lock UI */
+        .tab-lock { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255, 255, 255, 0.96); backdrop-filter: blur(4px); z-index: 150; display: flex; flex-direction: column; align-items: center; padding-top: 80px; text-align: center; border-radius: 12px; }
         .category-title { margin: 25px 0 12px; font-size: 18px; border-bottom: 2px solid var(--primary); padding-bottom: 5px; color: var(--primary-dark); font-weight: bold; }
         .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
         .product-card { background: var(--card-bg); border-radius: 12px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border: 1px solid #e0f2f1; overflow: hidden; display: flex; flex-direction: column; justify-content: space-between; }
@@ -28,11 +29,10 @@
         .weight-input { width: 100%; padding: 12px 10px; border: 1px solid #cfd8dc; border-radius: 6px; text-align: center; font-size: 16px; font-weight: bold; outline: none; background: #fff; }
         .swipe-container { position: relative; border-radius: 12px; background: var(--danger); overflow: hidden; margin-bottom: 10px; }
         .swipe-background { position: absolute; top: 0; right: 0; bottom: 0; width: 80px; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; z-index: 1; }
-        .swipe-card { background: var(--card-bg); z-index: 2; position: relative; width: 100%; border: 1px solid #eee; border-radius: 12px; }
+        .swipe-card { background: var(--card-bg); z-index: 2; position: relative; width: 100%; border: 1px solid #eee; border-radius: 12px; transition: transform 0.2s; }
         .cart-bar { position: fixed; bottom: 0; left: 0; right: 0; background: white; padding: 15px 20px calc(15px + env(safe-area-inset-bottom)); box-shadow: 0 -4px 15px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center; z-index: 90; }
         .modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 200; flex-direction: column; justify-content: flex-end; }
         .modal-content { background: white; border-radius: 20px 20px 0 0; padding: 20px; max-height: 85vh; display: flex; flex-direction: column; }
-        .scroll-area { overflow-y: auto; flex-grow: 1; padding-bottom: 20px; }
         .btn-main { width: 100%; padding: 16px; border-radius: 12px; border: none; font-size: 16px; font-weight: bold; margin-bottom: 10px; color: white; cursor: pointer; }
         .form-control { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 16px; outline: none; }
         .search-box { display: flex; gap: 8px; margin-bottom: 15px; position: relative; }
@@ -44,7 +44,7 @@
 <body>
 
 <header>
-    🥤 BOY | Order V3.7
+    🥤 BOY | Order V3.8
     <div class="header-icon" onclick="openManageModal()">⚙️</div>
 </header>
 
@@ -57,15 +57,15 @@
 <div id="tab-order" class="tab-content active">
     <div id="order-lock" class="tab-lock" style="display: none;">
         <h2 style="color:var(--primary);">✅ ส่งรายการสั่งของแล้ว</h2>
-        <button class="btn-main" style="background:var(--secondary); width:200px;" onclick="unlockOrder()">✏️ แก้ไขรายการสั่งของ</button>
+        <button class="btn-main" style="background:var(--secondary); width:220px;" onclick="unlockOrder()">แก้ไขรายการสั่งของ</button>
     </div>
     <div id="order-container"></div>
 </div>
 
 <div id="tab-receive" class="tab-content">
     <div id="receive-lock" class="tab-lock" style="display: none;">
-        <h2 style="color:var(--primary);">✅ บันทึกรับสินค้าแล้ว</h2>
-        <button class="btn-main" style="background:var(--secondary); width:200px;" onclick="unlockReceive()">✏️ แก้ไขข้อมูลรับของ</button>
+        <h2 style="color:var(--primary);">✅ บันทึกรับสินค้าเข้าชีทแล้ว</h2>
+        <button class="btn-main" style="background:var(--secondary); width:220px;" onclick="unlockReceive()">แก้ไขรายการสินค้า</button>
     </div>
     <div class="search-box">
         <input type="text" id="receive-search" class="form-control" placeholder="พิมพ์ค้นหาสินค้า..." oninput="showSuggestionsRec(this.value)">
@@ -73,13 +73,13 @@
         <button class="btn-main" style="background:var(--secondary); width:80px; margin:0;" onclick="addReceiveItem()">เพิ่ม</button>
     </div>
     <div id="receive-container"></div>
-    <button class="btn-main" style="background:var(--primary); margin-top:20px;" onclick="confirmReceive()">✅ ยืนยันรับสินค้าเข้าชีท</button>
+    <button class="btn-main" style="background:var(--primary); margin-top:20px; position:relative; z-index:1;" onclick="confirmReceive()">✅ ยืนยันรับสินค้าเข้าชีท</button>
 </div>
 
 <div id="tab-return" class="tab-content">
     <div id="return-lock" class="tab-lock" style="display: none;">
         <h2 style="color:#888;">🔒 ยังไม่ได้รับสินค้า</h2>
-        <button class="btn-main" style="background:#eee; color:#666; width:200px;" onclick="unlockReturn()">🔓 บังคับเปิดหน้าคืนของ</button>
+        <button class="btn-main" style="background:#eee; color:#666; width:220px;" onclick="unlockReturn()">บังคับเปิดหน้าคืนของ</button>
     </div>
     <div class="search-box">
         <input type="text" id="return-search" class="form-control" placeholder="พิมพ์ค้นหาสินค้าคืน..." oninput="showSuggestions(this.value)">
@@ -87,7 +87,7 @@
         <button class="btn-main" style="background:var(--danger); width:80px; margin:0;" onclick="addReturnItem()">เพิ่ม</button>
     </div>
     <div id="return-container"></div>
-    <button class="btn-main" style="background:var(--danger); margin-top:20px;" onclick="confirmReturn()">🔴 บันทึกคืนของเข้าชีท</button>
+    <button class="btn-main" style="background:var(--danger); margin-top:20px; position:relative; z-index:1;" onclick="confirmReturn()">🔴 บันทึกคืนของเข้าชีท</button>
 </div>
 
 <div class="modal" id="manage-modal">
@@ -114,8 +114,9 @@
             <h2 style="margin:0;">🛒 สรุปรายการ</h2>
             <button onclick="closeCart()" style="border:none; background:none; font-size:24px;">×</button>
         </div>
-        <div id="cart-list" class="scroll-area"></div>
+        <div id="cart-list" style="overflow-y:auto; flex-grow:1; margin-bottom:20px;"></div>
         <button class="btn-main" id="btn-cloud-send" style="background:var(--secondary);" onclick="saveAndSend()">💾 ส่งข้อมูลและสั่งของ (Cloud)</button>
+        <button class="btn-main" style="background:#FFEBEE; color:var(--danger);" onclick="clearOrderCart()">🗑️ ล้างตะกร้า</button>
     </div>
 </div>
 
@@ -186,7 +187,7 @@
     function moveItem(cat, idx, dir) { let items = activeCategories[cat]; let target = idx + dir; if (target >= 0 && target < items.length) { [items[idx], items[target]] = [items[target], items[idx]]; saveDB(); renderManageList(); renderOrder(); } }
     function addNewItemToDB() { const cat = document.getElementById('new-item-cat').value; const name = document.getElementById('new-item-name').value.trim(); if(name) { activeCategories[cat].push(name); saveDB(); init(); document.getElementById('new-item-name').value = ''; renderManageList(); } }
 
-    // --- สั่งของ ---
+    // --- ระบบปุ่มสั่งของ ---
     function renderOrder() {
         const container = document.getElementById('order-container'); container.innerHTML = '';
         for (const [cat, items] of Object.entries(activeCategories)) {
@@ -202,7 +203,7 @@
     function manualQty(item, val, type) { let n = parseInt(val) || 0; if(type==='order') { orderCart[item]=n; localStorage.setItem('boy_v2_order', JSON.stringify(orderCart)); updateOrderTotal(); } else if(type==='receive') { receiveQty[item]=n; saveReceiveLocal(); } else { returnQty[item]=n; saveReturnLocal(); } }
     function updateOrderTotal() { document.getElementById('total-qty').innerText = Object.values(orderCart).reduce((a, b) => a + b, 0); }
 
-    // --- รับสินค้า (UI เดิม) ---
+    // --- ระบบรับสินค้า (UI เดิม) ---
     function renderReceive() {
         const container = document.getElementById('receive-container'); container.innerHTML = '';
         for (const [cat, items] of Object.entries(activeCategories)) {
@@ -220,7 +221,7 @@
     function saveReceiveLocal() { localStorage.setItem('boy_v2_receive_qty', JSON.stringify(receiveQty)); localStorage.setItem('boy_v2_receive_wgt', JSON.stringify(receiveWgt)); }
     function manualWgt(item, val, type) { if(type==='receive') receiveWgt[item]=val; else returnWgt[item]=val; saveReceiveLocal(); saveReturnLocal(); }
 
-    // --- คืนของ ---
+    // --- ระบบคืนของ ---
     function renderReturn() {
         const container = document.getElementById('return-container'); container.innerHTML = '';
         Object.keys(returnQty).forEach(item => {
@@ -231,14 +232,15 @@
     function updateRetQty(item, change) { returnQty[item] = Math.max(0, (returnQty[item] || 0) + change); saveReturnLocal(); renderReturn(); }
     function saveReturnLocal() { localStorage.setItem('boy_v2_return_qty', JSON.stringify(returnQty)); localStorage.setItem('boy_v2_return_wgt', JSON.stringify(returnWgt)); }
 
-    // --- ฟังก์ชันยืนยันส่งข้อมูล (แก้ไข Fetch ให้ตรงกับ Order) ---
+    // --- ระบบยืนยันและส่งข้อมูล ---
     async function saveAndSend() {
         const btn = document.getElementById('btn-cloud-send'); btn.innerText = "กำลังส่ง...";
+        const payload = { action: 'order', qtyData: orderCart, categories: activeCategories };
         try {
             const dateStr = new Date().toLocaleDateString('en-CA');
             await window.setDoc(window.doc(window.db, "daily_orders", dateStr), { cart: orderCart, timestamp: new Date().toISOString() });
             const finalUrl = WEBHOOK_URL + "?t=" + new Date().getTime();
-            await fetch(finalUrl, { method: 'POST', mode: 'no-cors', cache: 'no-cache', body: JSON.stringify({ action: 'order', qtyData: orderCart, categories: activeCategories }) });
+            await fetch(finalUrl, { method: 'POST', mode: 'no-cors', cache: 'no-cache', body: JSON.stringify(payload) });
             alert("✅ สั่งของเรียบร้อย!"); appState.orderLocked = true; saveAppState(); updateLocksUI(); switchTab('receive'); closeCart();
         } catch (e) { alert("Error: " + e.message); } finally { btn.innerText = "💾 ส่งข้อมูลและสั่งของ (Cloud)"; }
     }
@@ -249,6 +251,7 @@
         const btn = document.querySelector('#tab-receive .btn-main'); btn.innerText = "กำลังบันทึก...";
         try {
             const finalUrl = WEBHOOK_URL + "?t=" + new Date().getTime();
+            // ปรับแก้ body ให้ส่งเป็น JSON แบบเดียวกับหน้าสั่งของ
             await fetch(finalUrl, { method: 'POST', mode: 'no-cors', cache: 'no-cache', body: JSON.stringify({ action: 'receive', qtyData: finalData }) });
             appState.receiveLocked = true; appState.returnLocked = false; saveAppState(); updateLocksUI(); switchTab('return');
         } catch(e) { alert(e.message); } finally { btn.innerText = "✅ ยืนยันรับสินค้าเข้าชีท"; }
@@ -264,7 +267,7 @@
         } catch(e) { alert(e.message); }
     }
 
-    // --- ฟังก์ชันเสริม (Swipe, Tab, Lock) ---
+    // --- ฟังก์ชันเสริม (Swipe, Tab, Search) ---
     let startX = 0, startY = 0;
     function swipeStart(e) { startX = e.touches[0].clientX; startY = e.touches[0].clientY; e.currentTarget.style.transition = 'none'; }
     function swipeMove(e) {
