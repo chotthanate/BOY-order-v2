@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>BOY | Order System V3.8</title>
+    <title>BOY | Order System V4.0</title>
     <style>
         :root { --primary: #4CAF50; --primary-dark: #388E3C; --secondary: #FF9800; --bg: #F4F9F4; --card-bg: #FFFFFF; --text: #333333; --danger: #F44336; }
         * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
@@ -16,7 +16,6 @@
         .tab-content { display: none; padding: 15px; animation: fadeIn 0.3s; position: relative; min-height: 70vh; }
         .tab-content.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
-        /* หน้า Lock UI */
         .tab-lock { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255, 255, 255, 0.96); backdrop-filter: blur(4px); z-index: 150; display: flex; flex-direction: column; align-items: center; padding-top: 80px; text-align: center; border-radius: 12px; }
         .category-title { margin: 25px 0 12px; font-size: 18px; border-bottom: 2px solid var(--primary); padding-bottom: 5px; color: var(--primary-dark); font-weight: bold; }
         .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
@@ -27,24 +26,31 @@
         .btn-plus { background: #E8F5E9; color: var(--primary); }
         .qty-input { width: 45px; text-align: center; font-size: 18px; font-weight: bold; color: var(--primary-dark); border: none; background: transparent; outline: none; }
         .weight-input { width: 100%; padding: 12px 10px; border: 1px solid #cfd8dc; border-radius: 6px; text-align: center; font-size: 16px; font-weight: bold; outline: none; background: #fff; }
-        .swipe-container { position: relative; border-radius: 12px; background: var(--danger); overflow: hidden; margin-bottom: 10px; }
+        
+        /* ปรับระบบ Swipe ให้เข้มงวดขึ้น */
+        .swipe-container { position: relative; border-radius: 12px; background: var(--danger); overflow: hidden; margin-bottom: 10px; touch-action: pan-y; }
         .swipe-background { position: absolute; top: 0; right: 0; bottom: 0; width: 80px; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; z-index: 1; }
         .swipe-card { background: var(--card-bg); z-index: 2; position: relative; width: 100%; border: 1px solid #eee; border-radius: 12px; transition: transform 0.2s; }
+        
         .cart-bar { position: fixed; bottom: 0; left: 0; right: 0; background: white; padding: 15px 20px calc(15px + env(safe-area-inset-bottom)); box-shadow: 0 -4px 15px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center; z-index: 90; }
         .modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 200; flex-direction: column; justify-content: flex-end; }
         .modal-content { background: white; border-radius: 20px 20px 0 0; padding: 20px; max-height: 85vh; display: flex; flex-direction: column; }
+        .scroll-area { overflow-y: auto; flex-grow: 1; padding-bottom: 20px; touch-action: pan-y; }
         .btn-main { width: 100%; padding: 16px; border-radius: 12px; border: none; font-size: 16px; font-weight: bold; margin-bottom: 10px; color: white; cursor: pointer; }
-        .form-control { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 16px; outline: none; }
+        .form-control { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 16px; outline: none; margin-bottom: 10px;}
         .search-box { display: flex; gap: 8px; margin-bottom: 15px; position: relative; }
         .autocomplete-items { position: absolute; border: 1px solid #d4d4d4; z-index: 1000; top: 100%; left: 0; right: 0; max-height: 250px; overflow-y: auto; background: white; box-shadow: 0 8px 16px rgba(0,0,0,0.2); }
         .autocomplete-items div { padding: 15px; cursor: pointer; border-bottom: 1px solid #eee; font-weight: bold; }
-        .sort-btn { background: #f0f0f0; border: none; width: 32px; height: 32px; border-radius: 6px; font-size: 14px; margin-left: 5px; }
+        
+        /* ปุ่มจัดการแบบใหม่ (ไม่ใช้ Swipe แล้ว) */
+        .manage-item-card { background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 12px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
+        .btn-icon { background: #f0f0f0; border: none; width: 34px; height: 34px; border-radius: 6px; font-size: 16px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
     </style>
 </head>
 <body>
 
 <header>
-    🥤 BOY | Order V3.8
+    🥤 BOY | Order V4.0
     <div class="header-icon" onclick="openManageModal()">⚙️</div>
 </header>
 
@@ -65,10 +71,10 @@
 <div id="tab-receive" class="tab-content">
     <div id="receive-lock" class="tab-lock" style="display: none;">
         <h2 style="color:var(--primary);">✅ บันทึกรับสินค้าเข้าชีทแล้ว</h2>
-        <button class="btn-main" style="background:var(--secondary); width:220px;" onclick="unlockReceive()">แก้ไขรายการสินค้า</button>
+        <button class="btn-main" style="background:var(--secondary); width:220px;" onclick="unlockReceive()">แก้ไขรายการรับสินค้า</button>
     </div>
     <div class="search-box">
-        <input type="text" id="receive-search" class="form-control" placeholder="พิมพ์ค้นหาสินค้า..." oninput="showSuggestionsRec(this.value)">
+        <input type="text" id="receive-search" class="form-control" style="margin-bottom:0;" placeholder="พิมพ์ค้นหาสินค้า..." oninput="showSuggestionsRec(this.value)">
         <div id="autocomplete-list-rec" class="autocomplete-items"></div>
         <button class="btn-main" style="background:var(--secondary); width:80px; margin:0;" onclick="addReceiveItem()">เพิ่ม</button>
     </div>
@@ -82,7 +88,7 @@
         <button class="btn-main" style="background:#eee; color:#666; width:220px;" onclick="unlockReturn()">บังคับเปิดหน้าคืนของ</button>
     </div>
     <div class="search-box">
-        <input type="text" id="return-search" class="form-control" placeholder="พิมพ์ค้นหาสินค้าคืน..." oninput="showSuggestions(this.value)">
+        <input type="text" id="return-search" class="form-control" style="margin-bottom:0;" placeholder="พิมพ์ค้นหาสินค้าคืน..." oninput="showSuggestions(this.value)">
         <div id="autocomplete-list" class="autocomplete-items"></div>
         <button class="btn-main" style="background:var(--danger); width:80px; margin:0;" onclick="addReturnItem()">เพิ่ม</button>
     </div>
@@ -97,13 +103,30 @@
             <button onclick="closeManageModal()" style="border:none; background:none; font-size:24px;">×</button>
         </div>
         <div class="scroll-area">
+            
             <div style="background:#f9f9f9; padding:15px; border-radius:12px; border:1px solid #eee; margin-bottom:20px;">
-                <h3 style="margin:0 0 10px 0; font-size:16px; color:var(--primary);">➕ เพิ่มสินค้าใหม่</h3>
-                <select id="new-item-cat" class="form-control" style="margin-bottom:10px;"></select>
-                <input type="text" id="new-item-name" class="form-control" placeholder="ชื่อสินค้า..." style="margin-bottom:10px;">
-                <button class="btn-main" style="background:var(--primary); margin:0;" onclick="addNewItemToDB()">บันทึก</button>
+                <h3 id="manage-form-title" style="margin:0 0 10px 0; font-size:16px; color:var(--primary);">➕ เพิ่มสินค้าใหม่</h3>
+                <select id="item-cat" class="form-control"></select>
+                <div style="display:flex; gap:10px;">
+                    <input type="text" id="item-name" class="form-control" placeholder="ชื่อสินค้า (เช่น ส้ม)">
+                    <input type="text" id="item-unit" class="form-control" placeholder="หน่วย (โหล, กล่อง)" style="width:120px;">
+                </div>
+                <label style="display:flex; align-items:center; gap:8px; margin-bottom:15px; font-size:14px; font-weight:bold; color:var(--danger);">
+                    <input type="checkbox" id="item-is-weight" style="width:20px; height:20px;">
+                    กรอกตัวเลขเอง (ลงชีทหน่วยเป็น "กรัม")
+                </label>
+                <div style="display:flex; gap:10px;">
+                    <button class="btn-main" style="background:var(--primary); margin:0;" onclick="saveItemData()">บันทึก</button>
+                    <button class="btn-main" id="btn-cancel-edit" style="background:#ccc; margin:0; display:none;" onclick="cancelEditMode()">ยกเลิก</button>
+                </div>
             </div>
-            <div id="manage-list"></div>
+
+            <div style="background:#fff; padding:15px; border-radius:12px; border:1px solid #ccc;">
+                <h3 style="margin:0 0 10px 0; font-size:16px; color:var(--secondary);">✏️ รายการสินค้าทั้งหมด</h3>
+                <input type="text" id="manage-search" class="form-control" placeholder="🔍 ค้นหาสินค้า..." oninput="renderManageList()">
+                <div id="manage-list"></div>
+            </div>
+
         </div>
     </div>
 </div>
@@ -114,7 +137,7 @@
             <h2 style="margin:0;">🛒 สรุปรายการ</h2>
             <button onclick="closeCart()" style="border:none; background:none; font-size:24px;">×</button>
         </div>
-        <div id="cart-list" style="overflow-y:auto; flex-grow:1; margin-bottom:20px;"></div>
+        <div id="cart-list" class="scroll-area"></div>
         <button class="btn-main" id="btn-cloud-send" style="background:var(--secondary);" onclick="saveAndSend()">💾 ส่งข้อมูลและสั่งของ (Cloud)</button>
         <button class="btn-main" style="background:#FFEBEE; color:var(--danger);" onclick="clearOrderCart()">🗑️ ล้างตะกร้า</button>
     </div>
@@ -146,9 +169,10 @@
 </script>
 
 <script>
-    let activeCategories = JSON.parse(localStorage.getItem('boy_v3_categories')) || {
-        "🍉 ผลไม้ (ใส่กล่อง)": ["ส้ม (โหล)", "อโวคาโด (กล่อง)", "แตงโม (กล่อง)", "สับปะรด ปั่น (กล่อง)", "สับปะรด สกัด (กล่อง)", "มะพร้าว (กล่อง)", "มะม่วง (กล่อง)", "เสาวรส (ถุง)", "น้ำมะพร้าว (ขวด)", "น้ำมะนาว (ขวด)", "ขิง (กล่อง)", "กระชาย (กล่อง)", "กีวี่ (กล่อง)", "มะละกอ (กล่อง)", "เมลอน (กล่อง)", "แคนตาลูป (กล่อง)"],
-        "🍍 ผลไม้ (โชว์)": ["แตงโม", "สับปะรด", "กล้วยดิบ", "กล้วยสุก", "แครอท", "แตงกวา", "อโวคาโด ดิบ", "อโวคาโดสุก", "แอปเปิลเขียว", "แอปเปิลแดง", "แก้วมังกรโชว์", "ฝรั่ง", "ส้ม", "เสาวรส", "เซเลอรี่", "เมล่อน", "แคนตาลูป", "ขิง", "กระชาย", "มะเขือเทศ", "เปปเปอร์มินท์", "บีทรูท", "ลูกมะพร้าว", "มะละกอ"],
+    // 🌟 ระบบเก็บข้อมูลแบบถาวร (Key ใหม่เพื่อป้องกันการรีเซ็ต)
+    const baseCategories = {
+        "🍉 ผลไม้ (ใส่กล่อง)": ["ส้ม (โหล)", "อโวคาโด (กล่อง)", "แตงโม (กล่อง)", "สับปะรด (สกัด+ปั่น) (กล่อง)", "มะพร้าว (ลูก)", "มะม่วง (กล่อง)", "เสาวรส (ถุง)", "น้ำมะพร้าว (ขวด)", "น้ำมะนาว (ขวด)", "ขิง (กล่อง)", "กระชาย (กล่อง)", "กีวี่ (กล่อง)", "มะละกอ (กล่อง)", "เมลอน (กล่อง)", "แคนตาลูป (กล่อง)"],
+        "🍍 ผลไม้ (โชว์)": ["แตงโม", "สับปะรด", "กล้วยดิบ", "กล้วยสุก", "แครอท", "แตงกวา", "อโวคาโด ดิบ", "อโวคาโดสุก", "แอปเปิลเขียว", "แอปเปิลแดง", "แก้วมังกรโชว์", "ฝรั่ง", "ส้ม", "เสาวรส", "เซเลอรี่", "เมล่อน", "แคนตาลูป", "ขิง", "กระชาย", "มะเขือเทศ", "เปปเปอร์มินท์", "บีทรูท", "มะละกอ"],
         "🥛 อื่นๆ": ["โยเกิร์ต", "นมข้นจืด คาร์เนชั่น (ถุง)", "นมข้นหวาน คาร์เนชั่น (ถุง)", "น้ำเชื่อม (ถุง)", "นมอัลมอนด์", "นมอัลมอนด์อโวคาโด", "นมโอ๊ต", "น้ำผึ้ง (ขวด)", "น้ำผึ้งเบอร์รี", "โค้ก", "ติ่งฟง สตรอว์เบอร์รี", "ติ่งฟง กีวี", "คาราเมล", "โซดา (ลัง)", "M150 (แพ็ก)", "ยาคูลท์ (ขวด)", "นมหมี (แพ็ก)", "เกลือ (กระสอบ)"],
         "🥫 ผลไม้อบแห้งกระปุก": ["ลูกพรุน (ฝาแดง)", "กีวี่ (ฝาแดง)", "ลูกไน๋เชื่อม (ฝาแดง)", "บ๊วย 5 รส (ฝาแดง)", "บ๊วยเค็ม (ฝาแดง)", "บ๊วยชิ้น (ฝาแดง)", "เชอร์รี่ (ฝาแดง)", "มะเขือเทศ (ฝาแดง)", "มะม่วงหยี", "มะขามจี๊ดจ๊าด", "สับปะรดอบ", "มะนาว อบแห้ง", "มะละกอ อบแห้ง", "ลูกพรุนหวาน (ฝาม่วง)", "ลูกไหนแช่อิ่ม (ฝาเขียว)", "ลูกพลัมอบแห้ง (ฝาเขียว)", "บ๊วยชิ้นอบแห้ง (ฝาชมพู)", "บ๊วยอบแห้งรสสตรอเบอร์รี่ (ฝาชมพู)", "บ๊วยรสน้ำผึ้ง (ฝาชมพู)", "บ๊วยเค็ม (ฝาเขียว)", "บ๊วยรสหวาน (ฝาม่วง)", "บ๊วยห้ารส (ฝาเขียว)", "มะเขือราชินีอบแห้ง (ฝาเขียว)", "มะขาม 3 รส (ฝาเขียว)", "มะขามป้อมแช่อิ่ม (ฝาเขียว)", "เชอร์รี่แช่อิ่ม (ฝาเขียว)", "เชอร์รี่อบแห้ง (ฝาม่วง)"],
         "🍬 ขนม": ["มันหนึบจิ๋ว", "มันหนึบชิ้นใหญ่", "ผักอบกรอบ (ถุงเขียว) 80 กรัม", "ผักอบกรอบ (ถุงม่วง) 100 กรัม", "ขนุนอบกรอบ", "หมึกบุกหม่าล่า", "เค้กหลันลี่", "เค้กไข่ยิ้ม", "เกาลัดมีเปลือก", "เกาลัดปอกเปลือก", "วอลนัท", "แครนเบอร์รี่ชีส (10 บาท)", "ช็อคบอล", "เยลลี่ผลไม้", "บ๊วย 2 บาท", "ตุ๊บตั๊บ", "ท้อแดง 3 บาท", "ข้าวโอ๊ต", "นูกัต", "บิสกิตแบน 4 บาท", "ปีโป้กรอบ", "เยลลี่", "โมจิ ช็อคโกแลตดูไบ"],
@@ -158,39 +182,142 @@
         "☕ ผง": ["ครีมเทียม", "โกโก้", "ช็อคโกแลต", "ไมโล", "โอวัลติน", "ชาเขียว", "ชาไทย", "ชานม", "นมสด", "เผือก", "ลาเต้", "มอคค่า", "คาปูชิโน", "เอสเพรสโซ"]
     };
 
-    let orderCart = JSON.parse(localStorage.getItem('boy_v2_order')) || {};
-    let receiveQty = JSON.parse(localStorage.getItem('boy_v2_receive_qty')) || {};
-    let receiveWgt = JSON.parse(localStorage.getItem('boy_v2_receive_wgt')) || {};
-    let returnQty = JSON.parse(localStorage.getItem('boy_v2_return_qty')) || {};
-    let returnWgt = JSON.parse(localStorage.getItem('boy_v2_return_wgt')) || {};
-    let appState = JSON.parse(localStorage.getItem('boy_v3_appstate')) || { orderLocked: false, receiveLocked: false, returnLocked: true };
-
-    function saveDB() { localStorage.setItem('boy_v3_categories', JSON.stringify(activeCategories)); }
-    function needsWeight(item) {
-        const ex = ["แตงโม", "สับปะรด", "กล้วยดิบ", "กล้วยสุก"]; if (ex.includes(item)) return false;
-        for (let cat in activeCategories) { if (activeCategories[cat].includes(item) && (cat === "🍉 ผลไม้ (ใส่กล่อง)" || cat === "🍍 ผลไม้ (โชว์)")) return true; } return false;
+    // โหลดฐานข้อมูลจากเครื่อง ถ้าไม่มีให้ใช้ baseCategories
+    let activeCategories = JSON.parse(localStorage.getItem('boy_v4_database')) || baseCategories;
+    
+    // ระบบจำรายการที่ "ต้องชั่งน้ำหนัก (กรัม)"
+    let weightItems = JSON.parse(localStorage.getItem('boy_v4_weights'));
+    if (!weightItems) {
+        weightItems = [];
+        for (let cat in activeCategories) {
+            if (cat === "🍉 ผลไม้ (ใส่กล่อง)" || cat === "🍍 ผลไม้ (โชว์)") {
+                activeCategories[cat].forEach(item => {
+                    if (!["แตงโม", "สับปะรด", "กล้วยดิบ", "กล้วยสุก", "มะพร้าว (ลูก)"].includes(item)) { weightItems.push(item); }
+                });
+            }
+        }
+        localStorage.setItem('boy_v4_weights', JSON.stringify(weightItems));
     }
 
-    function init() { renderOrder(); renderReceive(); renderReturn(); updateLocksUI(); const sel = document.getElementById('new-item-cat'); sel.innerHTML = ''; Object.keys(activeCategories).forEach(cat => sel.innerHTML += `<option value="${cat}">${cat}</option>`); }
+    let orderCart = JSON.parse(localStorage.getItem('boy_v4_order')) || {};
+    let receiveQty = JSON.parse(localStorage.getItem('boy_v4_receive_qty')) || {};
+    let receiveWgt = JSON.parse(localStorage.getItem('boy_v4_receive_wgt')) || {};
+    let returnQty = JSON.parse(localStorage.getItem('boy_v4_return_qty')) || {};
+    let returnWgt = JSON.parse(localStorage.getItem('boy_v4_return_wgt')) || {};
+    let appState = JSON.parse(localStorage.getItem('boy_v4_appstate')) || { orderLocked: false, receiveLocked: false, returnLocked: true };
 
-    // --- จัดการข้อมูล ---
-    function openManageModal() { document.getElementById('manage-modal').style.display = 'flex'; renderManageList(); }
+    function saveDB() { 
+        localStorage.setItem('boy_v4_database', JSON.stringify(activeCategories)); 
+        localStorage.setItem('boy_v4_weights', JSON.stringify(weightItems));
+    }
+
+    function init() { 
+        // 🌟 ตั้งค่าเริ่มต้น 4 รายการในหน้าคืนของ
+        const defaultReturns = ["ส้ม (โหล)", "แตงโม (กล่อง)", "สับปะรด (สกัด+ปั่น) (กล่อง)", "อโวคาโด (กล่อง)"];
+        let allItems = []; Object.values(activeCategories).forEach(arr => allItems = allItems.concat(arr));
+        defaultReturns.forEach(i => { if (returnQty[i] === undefined && allItems.includes(i)) returnQty[i] = 0; });
+
+        renderOrder(); renderReceive(); renderReturn(); updateLocksUI(); 
+        const sel = document.getElementById('item-cat'); sel.innerHTML = ''; 
+        Object.keys(activeCategories).forEach(cat => sel.innerHTML += `<option value="${cat}">${cat}</option>`); 
+    }
+
+    // --- จัดการฐานข้อมูล (ฟอร์มใหม่) ---
+    let editingItem = null; // เก็บข้อมูลตอนกดแก้ไข
+
+    function openManageModal() { document.getElementById('manage-modal').style.display = 'flex'; cancelEditMode(); renderManageList(); }
     function closeManageModal() { document.getElementById('manage-modal').style.display = 'none'; }
+    
+    function saveItemData() {
+        const cat = document.getElementById('item-cat').value;
+        const name = document.getElementById('item-name').value.trim();
+        const unit = document.getElementById('item-unit').value.trim();
+        const isWeight = document.getElementById('item-is-weight').checked;
+
+        if(!name) return alert("กรุณาใส่ชื่อสินค้าครับ");
+        
+        // ประกอบร่าง ชื่อ + หน่วย
+        const fullName = unit ? `${name} (${unit})` : name;
+
+        if (editingItem) {
+            // ลบของเก่าออก
+            activeCategories[editingItem.cat] = activeCategories[editingItem.cat].filter(i => i !== editingItem.oldName);
+            weightItems = weightItems.filter(i => i !== editingItem.oldName);
+        }
+
+        // เช็คชื่อซ้ำ
+        let allItems = []; Object.values(activeCategories).forEach(arr => allItems = allItems.concat(arr));
+        if (allItems.includes(fullName) && (!editingItem || fullName !== editingItem.oldName)) {
+            return alert("ชื่อสินค้านี้มีอยู่แล้วครับ!");
+        }
+
+        // เพิ่มของใหม่เข้าหมวดหมู่ที่เลือก
+        activeCategories[cat].push(fullName);
+        if (isWeight) weightItems.push(fullName);
+
+        saveDB(); renderManageList(); renderOrder(); cancelEditMode();
+    }
+
+    function editItemBtn(cat, oldFullName) {
+        editingItem = { cat: cat, oldName: oldFullName };
+        document.getElementById('manage-form-title').innerText = "✏️ แก้ไขสินค้า";
+        document.getElementById('item-cat').value = cat;
+        
+        // แยกชื่อกับหน่วย
+        let name = oldFullName; let unit = "";
+        let match = oldFullName.match(/(.*?)\s*\((.*?)\)$/);
+        if (match) { name = match[1].trim(); unit = match[2].trim(); }
+
+        document.getElementById('item-name').value = name;
+        document.getElementById('item-unit').value = unit;
+        document.getElementById('item-is-weight').checked = weightItems.includes(oldFullName);
+        
+        document.getElementById('btn-cancel-edit').style.display = 'block';
+        document.getElementById('manage-modal').querySelector('.scroll-area').scrollTop = 0; // เลื่อนขึ้นบนสุด
+    }
+
+    function cancelEditMode() {
+        editingItem = null;
+        document.getElementById('manage-form-title').innerText = "➕ เพิ่มสินค้าใหม่";
+        document.getElementById('item-name').value = '';
+        document.getElementById('item-unit').value = '';
+        document.getElementById('item-is-weight').checked = false;
+        document.getElementById('btn-cancel-edit').style.display = 'none';
+    }
+
     function renderManageList() {
+        const search = document.getElementById('manage-search').value.toLowerCase();
         const list = document.getElementById('manage-list'); list.innerHTML = '';
         for (const [cat, items] of Object.entries(activeCategories)) {
             items.forEach((item, idx) => {
-                list.innerHTML += `<div class="swipe-container"><div class="swipe-background">🗑️ ลบ</div><div class="swipe-card" ontouchstart="swipeStart(event)" ontouchmove="swipeMove(event)" ontouchend="swipeEnd(event, '${item}', 'manage', '${cat}')" style="padding:10px; display:flex; justify-content:space-between; align-items:center;"><div><span style="font-weight:bold;">${item}</span><br><span style="font-size:11px; color:#888;">${cat}</span></div><div style="display:flex; gap:5px;"><button class="sort-btn" onclick="moveItem('${cat}', ${idx}, -1)">⬆️</button><button class="sort-btn" onclick="moveItem('${cat}', ${idx}, 1)">⬇️</button></div></div></div>`;
+                if (!search || item.toLowerCase().includes(search) || cat.toLowerCase().includes(search)) {
+                    const isW = weightItems.includes(item) ? '<span style="color:var(--danger); font-size:10px;">(น้ำหนัก)</span>' : '';
+                    list.innerHTML += `
+                        <div class="manage-item-card">
+                            <div style="flex-grow:1;">
+                                <div style="font-weight:bold; font-size:14px;">${item} ${isW}</div>
+                                <div style="font-size:11px; color:#888;">${cat}</div>
+                            </div>
+                            <div style="display:flex; gap:5px;">
+                                <button class="btn-icon" onclick="moveItem('${cat}', ${idx}, -1)">⬆️</button>
+                                <button class="btn-icon" onclick="moveItem('${cat}', ${idx}, 1)">⬇️</button>
+                                <button class="btn-icon" style="background:#E3F2FD; color:#1976D2;" onclick="editItemBtn('${cat}', '${item}')">✏️</button>
+                                <button class="btn-icon" style="background:#FFEBEE; color:var(--danger);" onclick="deleteItemBtn('${cat}', '${item}')">🗑️</button>
+                            </div>
+                        </div>`;
+                }
             });
         }
     }
+    
     function moveItem(cat, idx, dir) { let items = activeCategories[cat]; let target = idx + dir; if (target >= 0 && target < items.length) { [items[idx], items[target]] = [items[target], items[idx]]; saveDB(); renderManageList(); renderOrder(); } }
-    function addNewItemToDB() { const cat = document.getElementById('new-item-cat').value; const name = document.getElementById('new-item-name').value.trim(); if(name) { activeCategories[cat].push(name); saveDB(); init(); document.getElementById('new-item-name').value = ''; renderManageList(); } }
+    function deleteItemBtn(cat, item) { if(confirm(`ลบ "${item}" หรือไม่?`)) { activeCategories[cat] = activeCategories[cat].filter(i => i !== item); saveDB(); renderManageList(); renderOrder(); } }
 
-    // --- ระบบปุ่มสั่งของ ---
+    // --- ระบบสั่งของ ---
     function renderOrder() {
         const container = document.getElementById('order-container'); container.innerHTML = '';
         for (const [cat, items] of Object.entries(activeCategories)) {
+            if(items.length === 0) continue;
             container.innerHTML += `<div class="category-title">${cat}</div>`;
             const grid = document.createElement('div'); grid.className = 'grid';
             items.forEach(item => {
@@ -199,11 +326,11 @@
             }); container.appendChild(grid);
         } updateOrderTotal();
     }
-    function updateOrderQty(item, change) { orderCart[item] = Math.max(0, (orderCart[item] || 0) + change); localStorage.setItem('boy_v2_order', JSON.stringify(orderCart)); renderOrder(); }
-    function manualQty(item, val, type) { let n = parseInt(val) || 0; if(type==='order') { orderCart[item]=n; localStorage.setItem('boy_v2_order', JSON.stringify(orderCart)); updateOrderTotal(); } else if(type==='receive') { receiveQty[item]=n; saveReceiveLocal(); } else { returnQty[item]=n; saveReturnLocal(); } }
+    function updateOrderQty(item, change) { orderCart[item] = Math.max(0, (orderCart[item] || 0) + change); localStorage.setItem('boy_v4_order', JSON.stringify(orderCart)); renderOrder(); }
+    function manualQty(item, val, type) { let n = parseInt(val) || 0; if(type==='order') { orderCart[item]=n; localStorage.setItem('boy_v4_order', JSON.stringify(orderCart)); updateOrderTotal(); } else if(type==='receive') { receiveQty[item]=n; saveReceiveLocal(); } else { returnQty[item]=n; saveReturnLocal(); } }
     function updateOrderTotal() { document.getElementById('total-qty').innerText = Object.values(orderCart).reduce((a, b) => a + b, 0); }
 
-    // --- ระบบรับสินค้า (UI เดิม) ---
+    // --- ระบบรับสินค้า ---
     function renderReceive() {
         const container = document.getElementById('receive-container'); container.innerHTML = '';
         for (const [cat, items] of Object.entries(activeCategories)) {
@@ -212,13 +339,13 @@
                 container.innerHTML += `<div class="category-title">${cat}</div>`;
                 catItems.forEach(item => {
                     const q = receiveQty[item] || 0; const w = receiveWgt[item] || "";
-                    container.innerHTML += `<div class="swipe-container"><div class="swipe-background">🗑️</div><div class="swipe-card" ontouchstart="swipeStart(event)" ontouchmove="swipeMove(event)" ontouchend="swipeEnd(event, '${item}', 'receive')"><div style="display:flex; justify-content:space-between; align-items:center; padding:12px;"><span style="font-weight:bold; font-size:15px;">${item}</span>${needsWeight(item) ? `<div style="width:120px;"><input type="number" class="weight-input" placeholder="กรัม" value="${w}" oninput="manualWgt('${item}', this.value, 'receive')" onclick="this.select()"></div>` : `<div class="controls" style="border:none; background:none; padding:0;"><button class="btn-minus" onclick="updateRecQty('${item}', -1)">-</button><input type="number" class="qty-input" value="${q}" onchange="manualQty('${item}', this.value, 'receive')" onclick="this.select()"><button class="btn-plus" onclick="updateRecQty('${item}', 1)">+</button></div>`}</div></div></div>`;
+                    container.innerHTML += `<div class="swipe-container"><div class="swipe-background">🗑️</div><div class="swipe-card" ontouchstart="swipeStart(event)" ontouchmove="swipeMove(event)" ontouchend="swipeEnd(event, '${item}', 'receive')"><div style="display:flex; justify-content:space-between; align-items:center; padding:12px;"><span style="font-weight:bold; font-size:15px;">${item}</span>${weightItems.includes(item) ? `<div style="width:120px;"><input type="number" class="weight-input" placeholder="กรัม" value="${w}" oninput="manualWgt('${item}', this.value, 'receive')" onclick="this.select()"></div>` : `<div class="controls" style="border:none; background:none; padding:0;"><button class="btn-minus" onclick="updateRecQty('${item}', -1)">-</button><input type="number" class="qty-input" value="${q}" onchange="manualQty('${item}', this.value, 'receive')" onclick="this.select()"><button class="btn-plus" onclick="updateRecQty('${item}', 1)">+</button></div>`}</div></div></div>`;
                 });
             }
         }
     }
     function updateRecQty(item, change) { receiveQty[item] = Math.max(0, (receiveQty[item] || 0) + change); saveReceiveLocal(); renderReceive(); }
-    function saveReceiveLocal() { localStorage.setItem('boy_v2_receive_qty', JSON.stringify(receiveQty)); localStorage.setItem('boy_v2_receive_wgt', JSON.stringify(receiveWgt)); }
+    function saveReceiveLocal() { localStorage.setItem('boy_v4_receive_qty', JSON.stringify(receiveQty)); localStorage.setItem('boy_v4_receive_wgt', JSON.stringify(receiveWgt)); }
     function manualWgt(item, val, type) { if(type==='receive') receiveWgt[item]=val; else returnWgt[item]=val; saveReceiveLocal(); saveReturnLocal(); }
 
     // --- ระบบคืนของ ---
@@ -226,11 +353,11 @@
         const container = document.getElementById('return-container'); container.innerHTML = '';
         Object.keys(returnQty).forEach(item => {
             const q = returnQty[item]; const w = returnWgt[item] || "";
-            container.innerHTML += `<div class="swipe-container"><div class="swipe-background">🗑️</div><div class="swipe-card" ontouchstart="swipeStart(event)" ontouchmove="swipeMove(event)" ontouchend="swipeEnd(event, '${item}', 'return')"><div style="display:flex; justify-content:space-between; align-items:center; padding:12px;"><span style="font-weight:bold;">${item}</span>${needsWeight(item) ? `<div style="width:120px;"><input type="number" class="weight-input" placeholder="กรัม" value="${w}" oninput="manualWgt('${item}', this.value, 'return')" onclick="this.select()"></div>` : `<div class="controls" style="border:none; background:none; padding:0;"><button class="btn-minus" onclick="updateRetQty('${item}', -1)">-</button><input type="number" class="qty-input" value="${q}" onchange="manualQty('${item}', this.value, 'return')" onclick="this.select()"><button class="btn-plus" onclick="updateRetQty('${item}', 1)">+</button></div>`}</div></div></div>`;
+            container.innerHTML += `<div class="swipe-container"><div class="swipe-background">🗑️</div><div class="swipe-card" ontouchstart="swipeStart(event)" ontouchmove="swipeMove(event)" ontouchend="swipeEnd(event, '${item}', 'return')"><div style="display:flex; justify-content:space-between; align-items:center; padding:12px;"><span style="font-weight:bold;">${item}</span>${weightItems.includes(item) ? `<div style="width:120px;"><input type="number" class="weight-input" placeholder="กรัม" value="${w}" oninput="manualWgt('${item}', this.value, 'return')" onclick="this.select()"></div>` : `<div class="controls" style="border:none; background:none; padding:0;"><button class="btn-minus" onclick="updateRetQty('${item}', -1)">-</button><input type="number" class="qty-input" value="${q}" onchange="manualQty('${item}', this.value, 'return')" onclick="this.select()"><button class="btn-plus" onclick="updateRetQty('${item}', 1)">+</button></div>`}</div></div></div>`;
         });
     }
     function updateRetQty(item, change) { returnQty[item] = Math.max(0, (returnQty[item] || 0) + change); saveReturnLocal(); renderReturn(); }
-    function saveReturnLocal() { localStorage.setItem('boy_v2_return_qty', JSON.stringify(returnQty)); localStorage.setItem('boy_v2_return_wgt', JSON.stringify(returnWgt)); }
+    function saveReturnLocal() { localStorage.setItem('boy_v4_return_qty', JSON.stringify(returnQty)); localStorage.setItem('boy_v4_return_wgt', JSON.stringify(returnWgt)); }
 
     // --- ระบบยืนยันและส่งข้อมูล ---
     async function saveAndSend() {
@@ -244,52 +371,63 @@
             alert("✅ สั่งของเรียบร้อย!"); appState.orderLocked = true; saveAppState(); updateLocksUI(); switchTab('receive'); closeCart();
         } catch (e) { alert("Error: " + e.message); } finally { btn.innerText = "💾 ส่งข้อมูลและสั่งของ (Cloud)"; }
     }
+    
+    // 🌟 ระบบส่งข้อมูล "กรัม" อัตโนมัติ
     async function confirmReceive() {
         let finalData = {}; let hasData = false;
-        Object.keys(receiveQty).forEach(item => { let v = needsWeight(item) ? (parseFloat(receiveWgt[item])||0) : (parseInt(receiveQty[item])||0); if(v>0) { finalData[needsWeight(item) ? `${item} (กรัม)` : item] = v; hasData = true; } });
+        Object.keys(receiveQty).forEach(item => { 
+            let v = weightItems.includes(item) ? (parseFloat(receiveWgt[item])||0) : (parseInt(receiveQty[item])||0); 
+            if(v>0) { 
+                // ถ้ารายการนั้นติ๊กว่าชั่งน้ำหนัก ให้เติมคำว่า (กรัม) ส่งไปให้ Sheet อัตโนมัติ
+                finalData[weightItems.includes(item) ? `${item} (กรัม)` : item] = v; 
+                hasData = true; 
+            } 
+        });
         if(!hasData || !confirm("ยืนยันรับสินค้า?")) return;
-        const btn = document.querySelector('#tab-receive .btn-main'); btn.innerText = "กำลังบันทึก...";
+        const btn = document.querySelector('#tab-receive .btn-main[onclick="confirmReceive()"]'); btn.innerText = "กำลังบันทึก...";
         try {
             const finalUrl = WEBHOOK_URL + "?t=" + new Date().getTime();
-            // ปรับแก้ body ให้ส่งเป็น JSON แบบเดียวกับหน้าสั่งของ
             await fetch(finalUrl, { method: 'POST', mode: 'no-cors', cache: 'no-cache', body: JSON.stringify({ action: 'receive', qtyData: finalData }) });
             appState.receiveLocked = true; appState.returnLocked = false; saveAppState(); updateLocksUI(); switchTab('return');
         } catch(e) { alert(e.message); } finally { btn.innerText = "✅ ยืนยันรับสินค้าเข้าชีท"; }
     }
     async function confirmReturn() {
         let finalData = {}; let hasData = false;
-        Object.keys(returnQty).forEach(item => { let v = needsWeight(item) ? (parseFloat(returnWgt[item])||0) : (parseInt(returnQty[item])||0); if(v>0) { finalData[needsWeight(item) ? `${item} (กรัม)` : item] = v; hasData = true; } });
+        Object.keys(returnQty).forEach(item => { 
+            let v = weightItems.includes(item) ? (parseFloat(returnWgt[item])||0) : (parseInt(returnQty[item])||0); 
+            if(v>0) { 
+                finalData[weightItems.includes(item) ? `${item} (กรัม)` : item] = v; 
+                hasData = true; 
+            } 
+        });
         if(!hasData || !confirm("ยืนยันคืนสินค้า?")) return;
         try {
             const finalUrl = WEBHOOK_URL + "?t=" + new Date().getTime();
             await fetch(finalUrl, { method: 'POST', mode: 'no-cors', cache: 'no-cache', body: JSON.stringify({ action: 'return', qtyData: finalData }) });
-            returnQty = {}; saveReturnLocal(); renderReturn(); alert("สำเร็จ!");
+            returnQty = {}; saveReturnLocal(); renderReturn(); alert("บันทึกสำเร็จ!");
         } catch(e) { alert(e.message); }
     }
 
-    // --- ฟังก์ชันเสริม (Swipe, Tab, Search) ---
-    let startX = 0, startY = 0;
-    function swipeStart(e) { startX = e.touches[0].clientX; startY = e.touches[0].clientY; e.currentTarget.style.transition = 'none'; }
+    // --- ระบบ Swipe ลบรายการ (หน้ารับ/คืน) เข้มงวดสุดๆ ---
+    let startX = 0, startY = 0, isSwiping = false;
+    function swipeStart(e) { startX = e.touches[0].clientX; startY = e.touches[0].clientY; isSwiping = false; e.currentTarget.style.transition = 'none'; }
     function swipeMove(e) {
-        let diffX = startX - e.touches[0].clientX; let diffY = startY - e.touches[0].clientY;
-        if (Math.abs(diffY) > Math.abs(diffX) * 0.8) { e.currentTarget.style.transform = `translateX(0)`; return; }
-        if (diffX > 0) e.currentTarget.style.transform = `translateX(-${Math.min(diffX, 90)}px)`;
+        let dX = startX - e.touches[0].clientX; let dY = startY - e.touches[0].clientY;
+        if (Math.abs(dY) > 20) return; // ถ้าเลื่อนแนวตั้งเกิน 20px ให้ยกเลิกการปัดซ้าย (ล็อกหน้าจอไม่ให้เด้ง)
+        if (dX > 20) isSwiping = true;
+        if (isSwiping && dX > 0) e.currentTarget.style.transform = `translateX(-${Math.min(dX, 90)}px)`;
     }
-    function swipeEnd(e, item, type, cat) {
-        let dX = startX - e.changedTouches[0].clientX; let dY = startY - e.changedTouches[0].clientY; e.currentTarget.style.transition = 'transform 0.2s ease';
-        if (dX > 60 && Math.abs(dX) > Math.abs(dY) && confirm(`ลบ "${item}"?`)) { 
-            if(type==='manage') { activeCategories[cat] = activeCategories[cat].filter(i => i !== item); saveDB(); renderManageList(); renderOrder(); }
-            else if(type==='receive') { delete receiveQty[item]; saveReceiveLocal(); renderReceive(); } else { delete returnQty[item]; saveReturnLocal(); renderReturn(); } 
+    function swipeEnd(e, item, type) {
+        if(!isSwiping) return;
+        let dX = startX - e.changedTouches[0].clientX; e.currentTarget.style.transition = 'transform 0.2s ease';
+        if (dX > 70 && confirm(`ลบ "${item}" ออกจากหน้านี้?`)) { 
+            if(type==='receive') { delete receiveQty[item]; saveReceiveLocal(); renderReceive(); } else { delete returnQty[item]; saveReturnLocal(); renderReturn(); } 
         } else { e.currentTarget.style.transform = `translateX(0)`; }
     }
 
     function switchTab(id) { document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active')); document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active')); document.getElementById(`tab-${id}`).classList.add('active'); document.getElementById(`tab-btn-${id}`).classList.add('active'); document.getElementById('cart-bar').style.display = id === 'order' ? 'flex' : 'none'; }
-    function saveAppState() { localStorage.setItem('boy_v3_appstate', JSON.stringify(appState)); }
-    function updateLocksUI() { 
-        document.getElementById('order-lock').style.display = appState.orderLocked ? 'flex' : 'none'; 
-        document.getElementById('receive-lock').style.display = appState.receiveLocked ? 'flex' : 'none';
-        document.getElementById('return-lock').style.display = appState.returnLocked ? 'flex' : 'none'; 
-    }
+    function saveAppState() { localStorage.setItem('boy_v4_appstate', JSON.stringify(appState)); }
+    function updateLocksUI() { document.getElementById('order-lock').style.display = appState.orderLocked ? 'flex' : 'none'; document.getElementById('receive-lock').style.display = appState.receiveLocked ? 'flex' : 'none'; document.getElementById('return-lock').style.display = appState.returnLocked ? 'flex' : 'none'; }
     function unlockOrder() { appState.orderLocked = false; saveAppState(); updateLocksUI(); }
     function unlockReceive() { appState.receiveLocked = false; saveAppState(); updateLocksUI(); }
     function unlockReturn() { appState.returnLocked = false; saveAppState(); updateLocksUI(); }
@@ -300,7 +438,7 @@
     function addReturnItem() { const input = document.getElementById('return-search'); const item = input.value.trim(); if(item) { returnQty[item] = 0; saveReturnLocal(); renderReturn(); input.value = ''; } }
     function openCart() { const list = document.getElementById('cart-list'); list.innerHTML = ''; for (const [cat, items] of Object.entries(activeCategories)) { const catItems = items.filter(i => orderCart[i] > 0); if(catItems.length > 0) { list.innerHTML += `<div style="font-weight:bold; color:var(--primary); margin:15px 0 5px;">${cat}</div>`; catItems.forEach(i => { list.innerHTML += `<div style="display:flex; justify-content:space-between; padding:8px; border-bottom:1px dashed #eee;"><span>${i}</span> <b>${orderCart[i]}</b></div>`; }); } } document.getElementById('cart-modal').style.display = 'flex'; }
     function closeCart() { document.getElementById('cart-modal').style.display = 'none'; }
-    function clearOrderCart() { if(confirm("ล้างตะกร้า?")) { orderCart = {}; localStorage.removeItem('boy_v2_order'); renderOrder(); closeCart(); } }
+    function clearOrderCart() { if(confirm("ล้างตะกร้า?")) { orderCart = {}; localStorage.removeItem('boy_v4_order'); renderOrder(); closeCart(); } }
 
     init();
 </script>
