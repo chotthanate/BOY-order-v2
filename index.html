@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>BOY | Order System V4.1</title>
+    <title>BOY | Order System V4.2</title>
     <style>
         :root { --primary: #4CAF50; --primary-dark: #388E3C; --secondary: #FF9800; --bg: #F4F9F4; --card-bg: #FFFFFF; --text: #333333; --danger: #F44336; }
         * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
@@ -38,19 +38,28 @@
         .search-box { display: flex; gap: 8px; margin-bottom: 15px; position: relative; }
         .autocomplete-items { position: absolute; border: 1px solid #d4d4d4; z-index: 1000; top: 100%; left: 0; right: 0; max-height: 250px; overflow-y: auto; background: white; box-shadow: 0 8px 16px rgba(0,0,0,0.2); }
         .autocomplete-items div { padding: 15px; cursor: pointer; border-bottom: 1px solid #eee; font-weight: bold; }
-        
-        /* สไตล์ตารางจัดการข้อมูลแบบ Excel-like */
         .excel-table { width: 100%; border-collapse: collapse; background: #fff; font-size: 14px; border-radius: 8px; overflow: hidden; border: 1px solid #ddd; }
         .excel-table th { background: #f0f0f0; padding: 10px; text-align: left; border-bottom: 2px solid #ccc; color: #555; }
         .excel-table td { padding: 10px; border-bottom: 1px solid #eee; vertical-align: middle; }
         .excel-table tr:hover { background-color: #f9f9f9; }
         .btn-icon { background: #f0f0f0; border: none; width: 30px; height: 30px; border-radius: 6px; font-size: 14px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+
+        /* อนิเมชั่นแก้วน้ำปั่นน่ารักๆ */
+        #cute-loader { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); backdrop-filter: blur(2px); z-index: 9999; justify-content: center; align-items: center; flex-direction: column; color: white; }
+        @keyframes bounceLoader { 0%, 100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-20px) scale(1.1); } }
+        .cup-icon { font-size: 60px; animation: bounceLoader 0.8s infinite alternate ease-in-out; text-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+        .loader-text { margin-top: 15px; font-weight: bold; font-size: 18px; background: var(--primary); padding: 8px 20px; border-radius: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
     </style>
 </head>
 <body>
 
+<div id="cute-loader">
+    <div class="cup-icon">🥤</div>
+    <div class="loader-text" id="loader-msg">กำลังปั่นข้อมูล...</div>
+</div>
+
 <header>
-    🥤 BOY | Order V4.1
+    🥤 BOY | Order V4.2
     <div class="header-icon" onclick="openManageModal()">⚙️</div>
 </header>
 
@@ -99,13 +108,13 @@
 <div class="modal" id="manage-modal">
     <div class="modal-content">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-            <h2 style="margin:0; color:var(--primary-dark);">⚙️ จัดการฐานข้อมูล (Cloud)</h2>
+            <h2 style="margin:0; color:var(--primary-dark);">⚙️ จัดการฐานข้อมูล</h2>
             <button onclick="closeManageModal()" style="border:none; background:none; font-size:24px;">×</button>
         </div>
         <div class="scroll-area">
             
             <button class="btn-main" style="background:#2196F3; font-size:14px; padding:12px; margin-bottom:15px; display:flex; align-items:center; justify-content:center; gap:8px;" onclick="copyDatabase()">
-                📋 คัดลอกฐานข้อมูลทั้งหมด (ส่งให้ AI / สำรอง)
+                📋 คัดลอกฐานข้อมูล
             </button>
 
             <div style="background:#f9f9f9; padding:15px; border-radius:12px; border:1px solid #eee; margin-bottom:20px;">
@@ -117,7 +126,7 @@
                 </div>
                 <label style="display:flex; align-items:center; gap:8px; margin-bottom:15px; font-size:14px; font-weight:bold; color:var(--danger);">
                     <input type="checkbox" id="item-is-weight" style="width:20px; height:20px;">
-                    กรอกเป็นตัวเลขเอง (หน่วย "กรัม")
+                    กรอกเลขเอง (ชั่งน้ำหนัก / กรัม)
                 </label>
                 <div style="display:flex; gap:10px;">
                     <button class="btn-main" style="background:var(--primary); margin:0;" onclick="saveItemData()">💾 บันทึกขึ้น Cloud</button>
@@ -132,18 +141,10 @@
             
             <div style="overflow-x:auto;">
                 <table class="excel-table">
-                    <thead>
-                        <tr>
-                            <th>ชื่อสินค้า / หมวดหมู่</th>
-                            <th style="text-align:center; width:60px;">สถานะ</th>
-                            <th style="text-align:center; width:100px;">จัดการ</th>
-                        </tr>
-                    </thead>
-                    <tbody id="manage-table-body">
-                        </tbody>
+                    <thead><tr><th>ชื่อสินค้า / หมวดหมู่</th><th style="text-align:center; width:60px;">สถานะ</th><th style="text-align:center; width:100px;">จัดการ</th></tr></thead>
+                    <tbody id="manage-table-body"></tbody>
                 </table>
             </div>
-
         </div>
     </div>
 </div>
@@ -155,7 +156,7 @@
             <button onclick="closeCart()" style="border:none; background:none; font-size:24px;">×</button>
         </div>
         <div id="cart-list" class="scroll-area"></div>
-        <button class="btn-main" id="btn-cloud-send" style="background:var(--secondary);" onclick="saveAndSend()">💾 ส่งข้อมูลและสั่งของ (Cloud)</button>
+        <button class="btn-main" style="background:var(--secondary);" onclick="saveAndSend()">💾 ยืนยันส่งสั่งของ</button>
         <button class="btn-main" style="background:#FFEBEE; color:var(--danger);" onclick="clearOrderCart()">🗑️ ล้างตะกร้า</button>
     </div>
 </div>
@@ -178,7 +179,6 @@
     
     const dateKey = new Date().toLocaleDateString('en-CA');
     
-    // 🌟 ดึงฐานข้อมูลหลัก (Master Data) จาก Firebase แบบ Real-time
     const masterDbRef = doc(db, "system_settings", "master_database");
     onSnapshot(masterDbRef, (docSnap) => {
         if (docSnap.exists()) {
@@ -187,12 +187,10 @@
             if(document.getElementById('manage-modal').style.display === 'flex') { renderManageList(); }
             renderOrder(); renderReceive(); renderReturn();
         } else {
-            // ถ้า Firebase ยังว่าง ให้ส่งข้อมูลเริ่มต้นขึ้นไปครั้งแรก
             setDoc(masterDbRef, { categories: activeCategories, weightItems: weightItems });
         }
     });
 
-    // ดึงข้อมูลออเดอร์รายวัน
     onSnapshot(doc(db, "daily_orders", dateKey), (docSnap) => {
         if (docSnap.exists()) {
             let cloudCart = docSnap.data().cart;
@@ -203,7 +201,19 @@
 </script>
 
 <script>
-    // ฐานข้อมูลเริ่มต้น (จะถูกเขียนทับด้วย Firebase ทันทีที่เน็ตเชื่อมต่อ)
+    // 🌟 1. บังคับลำดับหมวดหมู่ให้เป๊ะ 100%
+    const categoryOrder = [
+        "🍉 ผลไม้ (ใส่กล่อง)",
+        "🍍 ผลไม้ (โชว์)",
+        "🥛 อื่นๆ",
+        "🥫 ผลไม้อบแห้งกระปุก",
+        "🍬 ขนม",
+        "❄️ ผลไม้แช่แข็ง",
+        "📦 บรรจุภัณฑ์",
+        "🍪 ท็อปปิ้ง",
+        "☕ ผง"
+    ];
+
     let activeCategories = {
         "🍉 ผลไม้ (ใส่กล่อง)": ["ส้ม (โหล)", "อโวคาโด (กล่อง)", "แตงโม (กล่อง)", "สับปะรด (สกัด+ปั่น) (กล่อง)", "มะพร้าว (ลูก)", "มะม่วง (กล่อง)", "เสาวรส (ถุง)", "น้ำมะพร้าว (ขวด)", "น้ำมะนาว (ขวด)", "ขิง (กล่อง)", "กระชาย (กล่อง)", "กีวี่ (กล่อง)", "มะละกอ (กล่อง)", "เมลอน (กล่อง)", "แคนตาลูป (กล่อง)"],
         "🍍 ผลไม้ (โชว์)": ["แตงโม", "สับปะรด", "กล้วยดิบ", "กล้วยสุก", "แครอท", "แตงกวา", "อโวคาโด ดิบ", "อโวคาโดสุก", "แอปเปิลเขียว", "แอปเปิลแดง", "แก้วมังกรโชว์", "ฝรั่ง", "ส้ม", "เสาวรส", "เซเลอรี่", "เมล่อน", "แคนตาลูป", "ขิง", "กระชาย", "มะเขือเทศ", "เปปเปอร์มินท์", "บีทรูท", "มะละกอ"],
@@ -230,11 +240,9 @@
     let returnWgt = JSON.parse(localStorage.getItem('boy_v4_return_wgt')) || {};
     let appState = JSON.parse(localStorage.getItem('boy_v4_appstate')) || { orderLocked: false, receiveLocked: false, returnLocked: true };
 
-    // 🌟 ระบบบันทึกฐานข้อมูลลง Firebase
     function saveDB() { 
         if (window.db && window.setDoc && window.doc) {
-            window.setDoc(window.doc(window.db, "system_settings", "master_database"), { categories: activeCategories, weightItems: weightItems })
-            .catch(err => alert("บันทึกฐานข้อมูลล้มเหลว: " + err.message));
+            window.setDoc(window.doc(window.db, "system_settings", "master_database"), { categories: activeCategories, weightItems: weightItems });
         }
     }
 
@@ -243,31 +251,35 @@
         let allItems = []; Object.values(activeCategories).forEach(arr => allItems = allItems.concat(arr));
         defaultReturns.forEach(i => { if (returnQty[i] === undefined && allItems.includes(i)) returnQty[i] = 0; });
         renderOrder(); renderReceive(); renderReturn(); updateLocksUI(); 
+        
         const sel = document.getElementById('item-cat'); sel.innerHTML = ''; 
-        Object.keys(activeCategories).forEach(cat => sel.innerHTML += `<option value="${cat}">${cat}</option>`); 
+        categoryOrder.forEach(cat => { if(activeCategories[cat]) sel.innerHTML += `<option value="${cat}">${cat}</option>`; }); 
+    }
+
+    // --- อนิเมชั่นโหลด (น่ารักๆ) ---
+    function showLoader(text) {
+        document.getElementById('loader-msg').innerText = text;
+        document.getElementById('cute-loader').style.display = 'flex';
+    }
+    function hideLoader() {
+        document.getElementById('cute-loader').style.display = 'none';
     }
 
     // --- ฟังก์ชันคัดลอกฐานข้อมูลส่ง AI ---
     function copyDatabase() {
-        let text = "📦 ฐานข้อมูลสินค้า BOY Juice & Smoothies (ล่าสุด)\n\n";
-        for (let cat in activeCategories) {
-            text += `[ ${cat} ]\n`;
-            activeCategories[cat].forEach(item => {
-                let w = weightItems.includes(item) ? " ✅(ชั่งน้ำหนัก)" : "";
-                text += `- ${item}${w}\n`;
-            });
-            text += "\n";
-        }
-        navigator.clipboard.writeText(text).then(() => {
-            alert("✅ คัดลอกฐานข้อมูลเรียบร้อย!\nสามารถเอาไปกด 'วาง' ส่งให้บอท AI หรือส่งใน LINE ได้เลยครับ");
-        }).catch(err => {
-            alert("ไม่สามารถคัดลอกได้: " + err);
+        let text = "📦 ฐานข้อมูลสินค้า\n\n";
+        categoryOrder.forEach(cat => {
+            if(activeCategories[cat]) {
+                text += `[ ${cat} ]\n`;
+                activeCategories[cat].forEach(item => { text += `- ${item}${weightItems.includes(item) ? " (ชั่งน้ำหนัก)" : ""}\n`; });
+                text += "\n";
+            }
         });
+        navigator.clipboard.writeText(text).then(() => alert("✅ คัดลอกฐานข้อมูลเรียบร้อย!")).catch(err => alert("ไม่สามารถคัดลอกได้: " + err));
     }
 
-    // --- จัดการฐานข้อมูล (ฟอร์มใหม่) ---
+    // --- จัดการฐานข้อมูล ---
     let editingItem = null;
-
     function openManageModal() { document.getElementById('manage-modal').style.display = 'flex'; cancelEditMode(); renderManageList(); }
     function closeManageModal() { document.getElementById('manage-modal').style.display = 'none'; }
     
@@ -286,8 +298,9 @@
         }
 
         let allItems = []; Object.values(activeCategories).forEach(arr => allItems = allItems.concat(arr));
-        if (allItems.includes(fullName) && (!editingItem || fullName !== editingItem.oldName)) return alert("ชื่อสินค้านี้มีอยู่แล้วครับ!");
+        if (allItems.includes(fullName) && (!editingItem || fullName !== editingItem.oldName)) return alert("ชื่อสินค้านี้มีอยู่แล้ว!");
 
+        if(!activeCategories[cat]) activeCategories[cat] = [];
         activeCategories[cat].push(fullName);
         if (isWeight) weightItems.push(fullName);
 
@@ -320,29 +333,15 @@
         const search = document.getElementById('manage-search').value.toLowerCase();
         const tbody = document.getElementById('manage-table-body'); tbody.innerHTML = '';
         
-        for (const [cat, items] of Object.entries(activeCategories)) {
-            items.forEach((item, idx) => {
+        categoryOrder.forEach(cat => {
+            if(!activeCategories[cat]) return;
+            activeCategories[cat].forEach((item, idx) => {
                 if (!search || item.toLowerCase().includes(search) || cat.toLowerCase().includes(search)) {
                     const isW = weightItems.includes(item) ? '<br><span style="color:var(--danger); font-size:10px; font-weight:bold;">⚖️ ชั่งน้ำหนัก</span>' : '';
-                    tbody.innerHTML += `
-                        <tr>
-                            <td>
-                                <div style="font-weight:bold; color:var(--text);">${item}</div>
-                                <div style="font-size:11px; color:#888;">${cat}</div>
-                            </td>
-                            <td style="text-align:center; vertical-align:middle;">${isW}</td>
-                            <td>
-                                <div style="display:flex; gap:4px; justify-content:center;">
-                                    <button class="btn-icon" onclick="moveItem('${cat}', ${idx}, -1)">⬆️</button>
-                                    <button class="btn-icon" onclick="moveItem('${cat}', ${idx}, 1)">⬇️</button>
-                                    <button class="btn-icon" style="background:#E3F2FD; color:#1976D2;" onclick="editItemBtn('${cat}', '${item}')">✏️</button>
-                                    <button class="btn-icon" style="background:#FFEBEE; color:var(--danger);" onclick="deleteItemBtn('${cat}', '${item}')">🗑️</button>
-                                </div>
-                            </td>
-                        </tr>`;
+                    tbody.innerHTML += `<tr><td><div style="font-weight:bold; color:var(--text);">${item}</div><div style="font-size:11px; color:#888;">${cat}</div></td><td style="text-align:center; vertical-align:middle;">${isW}</td><td><div style="display:flex; gap:4px; justify-content:center;"><button class="btn-icon" onclick="moveItem('${cat}', ${idx}, -1)">⬆️</button><button class="btn-icon" onclick="moveItem('${cat}', ${idx}, 1)">⬇️</button><button class="btn-icon" style="background:#E3F2FD; color:#1976D2;" onclick="editItemBtn('${cat}', '${item}')">✏️</button><button class="btn-icon" style="background:#FFEBEE; color:var(--danger);" onclick="deleteItemBtn('${cat}', '${item}')">🗑️</button></div></td></tr>`;
                 }
             });
-        }
+        });
     }
     
     function moveItem(cat, idx, dir) { let items = activeCategories[cat]; let target = idx + dir; if (target >= 0 && target < items.length) { [items[idx], items[target]] = [items[target], items[idx]]; saveDB(); renderManageList(); renderOrder(); } }
@@ -351,15 +350,15 @@
     // --- ระบบสั่งของ ---
     function renderOrder() {
         const container = document.getElementById('order-container'); container.innerHTML = '';
-        for (const [cat, items] of Object.entries(activeCategories)) {
-            if(items.length === 0) continue;
+        categoryOrder.forEach(cat => {
+            if(!activeCategories[cat] || activeCategories[cat].length === 0) return;
             container.innerHTML += `<div class="category-title">${cat}</div>`;
             const grid = document.createElement('div'); grid.className = 'grid';
-            items.forEach(item => {
+            activeCategories[cat].forEach(item => {
                 const q = orderCart[item] || 0;
                 grid.innerHTML += `<div class="product-card"><div class="product-name" onclick="updateOrderQty('${item}', 1)">${item}</div><div class="controls"><button class="btn-minus" onclick="updateOrderQty('${item}', -1)" style="visibility:${q>0?'visible':'hidden'}">-</button><input type="number" class="qty-input" value="${q}" onchange="manualQty('${item}', this.value, 'order')" onclick="this.select()"><button class="btn-plus" onclick="updateOrderQty('${item}', 1)">+</button></div></div>`;
             }); container.appendChild(grid);
-        } updateOrderTotal();
+        }); updateOrderTotal();
     }
     function updateOrderQty(item, change) { orderCart[item] = Math.max(0, (orderCart[item] || 0) + change); localStorage.setItem('boy_v4_order', JSON.stringify(orderCart)); renderOrder(); }
     function manualQty(item, val, type) { let n = parseInt(val) || 0; if(type==='order') { orderCart[item]=n; localStorage.setItem('boy_v4_order', JSON.stringify(orderCart)); updateOrderTotal(); } else if(type==='receive') { receiveQty[item]=n; saveReceiveLocal(); } else { returnQty[item]=n; saveReturnLocal(); } }
@@ -368,16 +367,17 @@
     // --- ระบบรับสินค้า ---
     function renderReceive() {
         const container = document.getElementById('receive-container'); container.innerHTML = '';
-        for (const [cat, items] of Object.entries(activeCategories)) {
-            const catItems = items.filter(i => receiveQty[i] !== undefined);
+        categoryOrder.forEach(cat => {
+            if(!activeCategories[cat]) return;
+            const catItems = activeCategories[cat].filter(i => receiveQty[i] !== undefined);
             if (catItems.length > 0) {
                 container.innerHTML += `<div class="category-title">${cat}</div>`;
                 catItems.forEach(item => {
                     const q = receiveQty[item] || 0; const w = receiveWgt[item] || "";
-                    container.innerHTML += `<div class="swipe-container"><div class="swipe-background">🗑️</div><div class="swipe-card" ontouchstart="swipeStart(event)" ontouchmove="swipeMove(event)" ontouchend="swipeEnd(event, '${item}', 'receive')"><div style="display:flex; justify-content:space-between; align-items:center; padding:12px;"><span style="font-weight:bold; font-size:15px;">${item}</span>${weightItems.includes(item) ? `<div style="width:120px;"><input type="number" class="weight-input" placeholder="กรัม" value="${w}" oninput="manualWgt('${item}', this.value, 'receive')" onclick="this.select()"></div>` : `<div class="controls" style="border:none; background:none; padding:0;"><button class="btn-minus" onclick="updateRecQty('${item}', -1)">-</button><input type="number" class="qty-input" value="${q}" onchange="manualQty('${item}', this.value, 'receive')" onclick="this.select()"><button class="btn-plus" onclick="updateRecQty('${item}', 1)">+</button></div>`}</div></div></div>`;
+                    container.innerHTML += `<div class="swipe-container"><div class="swipe-background">🗑️</div><div class="swipe-card" ontouchstart="swipeStart(event)" ontouchmove="swipeMove(event)" ontouchend="swipeEnd(event, '${item}', 'receive')"><div style="display:flex; justify-content:space-between; align-items:center; padding:12px;"><span style="font-weight:bold; font-size:15px;" class="item-id-name">${item}</span>${weightItems.includes(item) ? `<div style="width:120px;"><input type="number" class="weight-input" placeholder="กรัม" value="${w}" oninput="manualWgt('${item}', this.value, 'receive')" onclick="this.select()"></div>` : `<div class="controls" style="border:none; background:none; padding:0;"><button class="btn-minus" onclick="updateRecQty('${item}', -1)">-</button><input type="number" class="qty-input" value="${q}" onchange="manualQty('${item}', this.value, 'receive')" onclick="this.select()"><button class="btn-plus" onclick="updateRecQty('${item}', 1)">+</button></div>`}</div></div></div>`;
                 });
             }
-        }
+        });
     }
     function updateRecQty(item, change) { receiveQty[item] = Math.max(0, (receiveQty[item] || 0) + change); saveReceiveLocal(); renderReceive(); }
     function saveReceiveLocal() { localStorage.setItem('boy_v4_receive_qty', JSON.stringify(receiveQty)); localStorage.setItem('boy_v4_receive_wgt', JSON.stringify(receiveWgt)); }
@@ -388,15 +388,15 @@
         const container = document.getElementById('return-container'); container.innerHTML = '';
         Object.keys(returnQty).forEach(item => {
             const q = returnQty[item]; const w = returnWgt[item] || "";
-            container.innerHTML += `<div class="swipe-container"><div class="swipe-background">🗑️</div><div class="swipe-card" ontouchstart="swipeStart(event)" ontouchmove="swipeMove(event)" ontouchend="swipeEnd(event, '${item}', 'return')"><div style="display:flex; justify-content:space-between; align-items:center; padding:12px;"><span style="font-weight:bold;">${item}</span>${weightItems.includes(item) ? `<div style="width:120px;"><input type="number" class="weight-input" placeholder="กรัม" value="${w}" oninput="manualWgt('${item}', this.value, 'return')" onclick="this.select()"></div>` : `<div class="controls" style="border:none; background:none; padding:0;"><button class="btn-minus" onclick="updateRetQty('${item}', -1)">-</button><input type="number" class="qty-input" value="${q}" onchange="manualQty('${item}', this.value, 'return')" onclick="this.select()"><button class="btn-plus" onclick="updateRetQty('${item}', 1)">+</button></div>`}</div></div></div>`;
+            container.innerHTML += `<div class="swipe-container"><div class="swipe-background">🗑️</div><div class="swipe-card" ontouchstart="swipeStart(event)" ontouchmove="swipeMove(event)" ontouchend="swipeEnd(event, '${item}', 'return')"><div style="display:flex; justify-content:space-between; align-items:center; padding:12px;"><span style="font-weight:bold;" class="item-id-name">${item}</span>${weightItems.includes(item) ? `<div style="width:120px;"><input type="number" class="weight-input" placeholder="กรัม" value="${w}" oninput="manualWgt('${item}', this.value, 'return')" onclick="this.select()"></div>` : `<div class="controls" style="border:none; background:none; padding:0;"><button class="btn-minus" onclick="updateRetQty('${item}', -1)">-</button><input type="number" class="qty-input" value="${q}" onchange="manualQty('${item}', this.value, 'return')" onclick="this.select()"><button class="btn-plus" onclick="updateRetQty('${item}', 1)">+</button></div>`}</div></div></div>`;
         });
     }
     function updateRetQty(item, change) { returnQty[item] = Math.max(0, (returnQty[item] || 0) + change); saveReturnLocal(); renderReturn(); }
     function saveReturnLocal() { localStorage.setItem('boy_v4_return_qty', JSON.stringify(returnQty)); localStorage.setItem('boy_v4_return_wgt', JSON.stringify(returnWgt)); }
 
-    // --- ระบบยืนยันและส่งข้อมูล ---
+    // --- 🌟 ระบบยืนยันและส่งข้อมูล (อ่านจากหน้าจอเท่านั้น แก้บัคผีหลอก) ---
     async function saveAndSend() {
-        const btn = document.getElementById('btn-cloud-send'); btn.innerText = "กำลังส่ง...";
+        showLoader("กำลังจัดเตรียมออเดอร์...");
         const payload = { action: 'order', qtyData: orderCart, categories: activeCategories };
         try {
             const dateStr = new Date().toLocaleDateString('en-CA');
@@ -404,38 +404,63 @@
             const finalUrl = WEBHOOK_URL + "?t=" + new Date().getTime();
             await fetch(finalUrl, { method: 'POST', mode: 'no-cors', cache: 'no-cache', body: JSON.stringify(payload) });
             alert("✅ สั่งของเรียบร้อย!"); appState.orderLocked = true; saveAppState(); updateLocksUI(); switchTab('receive'); closeCart();
-        } catch (e) { alert("Error: " + e.message); } finally { btn.innerText = "💾 ส่งข้อมูลและสั่งของ (Cloud)"; }
+        } catch (e) { alert("Error: " + e.message); } finally { hideLoader(); }
     }
     
     async function confirmReceive() {
         let finalData = {}; let hasData = false;
-        Object.keys(receiveQty).forEach(item => { 
-            let v = weightItems.includes(item) ? (parseFloat(receiveWgt[item])||0) : (parseInt(receiveQty[item])||0); 
-            if(v>0) { finalData[weightItems.includes(item) ? `${item} (กรัม)` : item] = v; hasData = true; } 
+        
+        // กวาดข้อมูลจาก "หน้าจอ" โดยตรงเท่านั้น (แก้บัคของแถม)
+        document.querySelectorAll('#receive-container .swipe-card').forEach(card => {
+            let itemName = card.querySelector('.item-id-name').innerText.trim();
+            let wgtInput = card.querySelector('.weight-input');
+            let qtyInput = card.querySelector('.qty-input');
+            let v = 0;
+            if (wgtInput) v = parseFloat(wgtInput.value) || 0;
+            else if (qtyInput) v = parseInt(qtyInput.value) || 0;
+            
+            if (v > 0) { finalData[itemName] = v; hasData = true; }
         });
-        if(!hasData || !confirm("ยืนยันรับสินค้า?")) return;
-        const btn = document.querySelector('#tab-receive .btn-main[onclick="confirmReceive()"]'); btn.innerText = "กำลังบันทึก...";
+
+        if(!hasData) return alert("ยังไม่ได้ใส่ยอดสินค้านะครับ");
+        if(!confirm("ยืนยันรับสินค้า?")) return;
+        
+        showLoader("กำลังบันทึกรับของ...");
         try {
             const finalUrl = WEBHOOK_URL + "?t=" + new Date().getTime();
-            await fetch(finalUrl, { method: 'POST', mode: 'no-cors', cache: 'no-cache', body: JSON.stringify({ action: 'receive', qtyData: finalData }) });
+            // 🌟 ส่ง wgtList ไปให้ Apps Script รู้ว่าตัวไหนต้องใส่ (กรัม)
+            await fetch(finalUrl, { method: 'POST', mode: 'no-cors', cache: 'no-cache', body: JSON.stringify({ action: 'receive', qtyData: finalData, weightItems: weightItems }) });
             appState.receiveLocked = true; appState.returnLocked = false; saveAppState(); updateLocksUI(); switchTab('return');
-        } catch(e) { alert(e.message); } finally { btn.innerText = "✅ ยืนยันรับสินค้าเข้าชีท"; }
+        } catch(e) { alert(e.message); } finally { hideLoader(); }
     }
+    
     async function confirmReturn() {
         let finalData = {}; let hasData = false;
-        Object.keys(returnQty).forEach(item => { 
-            let v = weightItems.includes(item) ? (parseFloat(returnWgt[item])||0) : (parseInt(returnQty[item])||0); 
-            if(v>0) { finalData[weightItems.includes(item) ? `${item} (กรัม)` : item] = v; hasData = true; } 
+        
+        // กวาดข้อมูลจาก "หน้าจอ" โดยตรง
+        document.querySelectorAll('#return-container .swipe-card').forEach(card => {
+            let itemName = card.querySelector('.item-id-name').innerText.trim();
+            let wgtInput = card.querySelector('.weight-input');
+            let qtyInput = card.querySelector('.qty-input');
+            let v = 0;
+            if (wgtInput) v = parseFloat(wgtInput.value) || 0;
+            else if (qtyInput) v = parseInt(qtyInput.value) || 0;
+            
+            if (v > 0) { finalData[itemName] = v; hasData = true; }
         });
-        if(!hasData || !confirm("ยืนยันคืนสินค้า?")) return;
+
+        if(!hasData) return alert("ยังไม่ได้ใส่ยอดสินค้านะครับ");
+        if(!confirm("ยืนยันคืนสินค้า?")) return;
+        
+        showLoader("กำลังบันทึกคืนของ...");
         try {
             const finalUrl = WEBHOOK_URL + "?t=" + new Date().getTime();
-            await fetch(finalUrl, { method: 'POST', mode: 'no-cors', cache: 'no-cache', body: JSON.stringify({ action: 'return', qtyData: finalData }) });
+            await fetch(finalUrl, { method: 'POST', mode: 'no-cors', cache: 'no-cache', body: JSON.stringify({ action: 'return', qtyData: finalData, weightItems: weightItems }) });
             returnQty = {}; saveReturnLocal(); renderReturn(); alert("บันทึกสำเร็จ!");
-        } catch(e) { alert(e.message); }
+        } catch(e) { alert(e.message); } finally { hideLoader(); }
     }
 
-    // --- ระบบ Swipe ลบรายการ ---
+    // --- ระบบ Swipe ---
     let startX = 0, startY = 0, isSwiping = false;
     function swipeStart(e) { startX = e.touches[0].clientX; startY = e.touches[0].clientY; isSwiping = false; e.currentTarget.style.transition = 'none'; }
     function swipeMove(e) {
@@ -459,11 +484,11 @@
     function unlockReceive() { appState.receiveLocked = false; saveAppState(); updateLocksUI(); }
     function unlockReturn() { appState.returnLocked = false; saveAppState(); updateLocksUI(); }
 
-    function showSuggestionsRec(val) { const list = document.getElementById('autocomplete-list-rec'); list.innerHTML = ''; if(!val) return; for(let cat in activeCategories) { activeCategories[cat].filter(i => i.toLowerCase().includes(val.toLowerCase())).forEach(match => { const div = document.createElement('div'); div.innerHTML = match; div.onclick = () => { document.getElementById('receive-search').value = match; list.innerHTML = ''; }; list.appendChild(div); }); } }
+    function showSuggestionsRec(val) { const list = document.getElementById('autocomplete-list-rec'); list.innerHTML = ''; if(!val) return; categoryOrder.forEach(cat => { if(!activeCategories[cat]) return; activeCategories[cat].filter(i => i.toLowerCase().includes(val.toLowerCase())).forEach(match => { const div = document.createElement('div'); div.innerHTML = match; div.onclick = () => { document.getElementById('receive-search').value = match; list.innerHTML = ''; }; list.appendChild(div); }); }); }
     function addReceiveItem() { const input = document.getElementById('receive-search'); const item = input.value.trim(); if(item) { receiveQty[item] = 0; saveReceiveLocal(); renderReceive(); input.value = ''; document.getElementById('autocomplete-list-rec').innerHTML = ''; } }
-    function showSuggestions(val) { const list = document.getElementById('autocomplete-list'); list.innerHTML = ''; if(!val) return; for(let cat in activeCategories) { activeCategories[cat].filter(i => i.toLowerCase().includes(val.toLowerCase())).forEach(match => { const div = document.createElement('div'); div.innerHTML = match; div.onclick = () => { document.getElementById('return-search').value = match; list.innerHTML = ''; }; list.appendChild(div); }); } }
+    function showSuggestions(val) { const list = document.getElementById('autocomplete-list'); list.innerHTML = ''; if(!val) return; categoryOrder.forEach(cat => { if(!activeCategories[cat]) return; activeCategories[cat].filter(i => i.toLowerCase().includes(val.toLowerCase())).forEach(match => { const div = document.createElement('div'); div.innerHTML = match; div.onclick = () => { document.getElementById('return-search').value = match; list.innerHTML = ''; }; list.appendChild(div); }); }); }
     function addReturnItem() { const input = document.getElementById('return-search'); const item = input.value.trim(); if(item) { returnQty[item] = 0; saveReturnLocal(); renderReturn(); input.value = ''; document.getElementById('autocomplete-list').innerHTML = ''; } }
-    function openCart() { const list = document.getElementById('cart-list'); list.innerHTML = ''; for (const [cat, items] of Object.entries(activeCategories)) { const catItems = items.filter(i => orderCart[i] > 0); if(catItems.length > 0) { list.innerHTML += `<div style="font-weight:bold; color:var(--primary); margin:15px 0 5px;">${cat}</div>`; catItems.forEach(i => { list.innerHTML += `<div style="display:flex; justify-content:space-between; padding:8px; border-bottom:1px dashed #eee;"><span>${i}</span> <b>${orderCart[i]}</b></div>`; }); } } document.getElementById('cart-modal').style.display = 'flex'; }
+    function openCart() { const list = document.getElementById('cart-list'); list.innerHTML = ''; categoryOrder.forEach(cat => { if(!activeCategories[cat]) return; const catItems = activeCategories[cat].filter(i => orderCart[i] > 0); if(catItems.length > 0) { list.innerHTML += `<div style="font-weight:bold; color:var(--primary); margin:15px 0 5px;">${cat}</div>`; catItems.forEach(i => { list.innerHTML += `<div style="display:flex; justify-content:space-between; padding:8px; border-bottom:1px dashed #eee;"><span>${i}</span> <b>${orderCart[i]}</b></div>`; }); } }); document.getElementById('cart-modal').style.display = 'flex'; }
     function closeCart() { document.getElementById('cart-modal').style.display = 'none'; }
     function clearOrderCart() { if(confirm("ล้างตะกร้า?")) { orderCart = {}; localStorage.removeItem('boy_v4_order'); renderOrder(); closeCart(); } }
 
