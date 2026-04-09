@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>BOY | Order System V4.6</title>
+    <title>BOY | Order System V4.7</title>
     <style>
         :root { --primary: #4CAF50; --primary-dark: #388E3C; --secondary: #FF9800; --bg: #F4F9F4; --card-bg: #FFFFFF; --text: #333333; --danger: #F44336; }
         * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
@@ -58,7 +58,7 @@
         .cat-header-row { background: #E8F5E9; color: var(--primary-dark); font-weight: bold; padding: 10px; text-align: left; scroll-margin-top: 60px; }
         .btn-icon { background: #f0f0f0; border: none; width: 30px; height: 30px; border-radius: 6px; font-size: 14px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
 
-        /* 🌟 อนิเมชั่นแก้วน้ำปั่นน่ารักๆ */
+        /* อนิเมชั่นแก้วน้ำปั่นน่ารักๆ */
         #cute-loader { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); backdrop-filter: blur(2px); z-index: 9999; justify-content: center; align-items: center; flex-direction: column; color: white; }
         @keyframes bounceLoader { 0%, 100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-20px) scale(1.1); } }
         .cup-icon { font-size: 60px; animation: bounceLoader 0.8s infinite alternate ease-in-out; text-shadow: 0 4px 10px rgba(0,0,0,0.3); }
@@ -70,7 +70,7 @@
 <div id="cute-loader"><div class="cup-icon">🥤</div><div class="loader-text" id="loader-msg">กำลังปั่นข้อมูล...</div></div>
 
 <header>
-    🥤 BOY | Order V4.6
+    🥤 BOY | Order V4.7
     <div class="header-icon" onclick="openManageModal()">⚙️</div>
 </header>
 
@@ -193,18 +193,24 @@
     
     const dateKey = new Date().toLocaleDateString('en-CA');
     
-    // 🌟 ระบบดึงฐานข้อมูลหลัก + คู่มือแปลชื่อ
-    let itemMappings = {}; window.itemMappings = itemMappings;
+    // 🌟 ระบบดึงฐานข้อมูล (เวอร์ชันปลอดภัย 100% ไม่มีเซฟทับเองแล้ว)
+    let itemMappings = JSON.parse(localStorage.getItem('boy_v4_mappings')) || {}; 
+    window.itemMappings = itemMappings;
+    
     const masterDbRef = doc(db, "system_settings", "master_database");
     onSnapshot(masterDbRef, (docSnap) => {
         if (docSnap.exists()) {
-            activeCategories = docSnap.data().categories;
+            activeCategories = docSnap.data().categories || {};
             weightItems = docSnap.data().weightItems || [];
             window.itemMappings = docSnap.data().itemMappings || {};
+            
+            // 💾 สำรองข้อมูลลงเครื่องทันทีที่ดึงจาก Cloud สำเร็จ
+            localStorage.setItem('boy_v4_database', JSON.stringify(activeCategories));
+            localStorage.setItem('boy_v4_weights', JSON.stringify(weightItems));
+            localStorage.setItem('boy_v4_mappings', JSON.stringify(window.itemMappings));
+
             if(document.getElementById('manage-modal').style.display === 'flex') renderManageList();
             renderOrder(); renderReceive(); renderReturn();
-        } else {
-            setDoc(masterDbRef, { categories: activeCategories, weightItems: weightItems, itemMappings: {} });
         }
     });
 
@@ -228,31 +234,22 @@
 <script>
     const categoryOrder = ["🍉 ผลไม้ (ใส่กล่อง)", "🍍 ผลไม้ (โชว์)", "🥛 อื่นๆ", "🥫 ผลไม้อบแห้งกระปุก", "🍬 ขนม", "❄️ ผลไม้แช่แข็ง", "📦 บรรจุภัณฑ์", "🍪 ท็อปปิ้ง", "☕ ผง"];
     
-    let activeCategories = {
-        "🍉 ผลไม้ (ใส่กล่อง)": ["ส้ม (โหล)", "อโวคาโด (กล่อง)", "แตงโม (กล่อง)", "สับปะรด (สกัด+ปั่น) (กล่อง)", "มะพร้าว (ลูก)", "มะม่วง (กล่อง)", "เสาวรส (ถุง)", "น้ำมะพร้าว (ขวด)", "น้ำมะนาว (ขวด)", "ขิง (กล่อง)", "กระชาย (กล่อง)", "กีวี่ (กล่อง)", "มะละกอ (กล่อง)", "เมลอน (กล่อง)", "แคนตาลูป (กล่อง)"],
-        "🍍 ผลไม้ (โชว์)": ["แตงโม", "สับปะรด", "กล้วยดิบ", "กล้วยสุก", "แครอท", "แตงกวา", "อโวคาโด ดิบ", "อโวคาโดสุก", "แอปเปิลเขียว", "แอปเปิลแดง", "แก้วมังกรโชว์", "ฝรั่ง", "ส้ม", "เสาวรส", "เซเลอรี่", "เมล่อน", "แคนตาลูป", "ขิง", "กระชาย", "มะเขือเทศ", "เปปเปอร์มินท์", "บีทรูท", "มะละกอ"],
-        "🥛 อื่นๆ": ["โยเกิร์ต", "นมข้นจืด คาร์เนชั่น (ถุง)", "นมข้นหวาน คาร์เนชั่น (ถุง)", "น้ำเชื่อม (ถุง)", "นมอัลมอนด์", "นมอัลมอนด์อโวคาโด", "นมโอ๊ต", "น้ำผึ้ง (ขวด)", "น้ำผึ้งเบอร์รี", "โค้ก", "ติ่งฟง สตรอว์เบอร์รี", "ติ่งฟง กีวี", "คาราเมล", "โซดา (ลัง)", "M150 (แพ็ก)", "ยาคูลท์ (ขวด)", "นมหมี (แพ็ก)", "เกลือ (กระสอบ)"],
-        "🥫 ผลไม้อบแห้งกระปุก": ["ลูกพรุน (ฝาแดง)", "กีวี่ (ฝาแดง)", "ลูกไน๋เชื่อม (ฝาแดง)", "บ๊วย 5 รส (ฝาแดง)", "บ๊วยเค็ม (ฝาแดง)", "บ๊วยชิ้น (ฝาแดง)", "เชอร์รี่ (ฝาแดง)", "มะเขือเทศ (ฝาแดง)", "มะม่วงหยี", "มะขามจี๊ดจ๊าด", "สับปะรดอบ", "มะนาว อบแห้ง", "มะละกอ อบแห้ง", "ลูกพรุนหวาน (ฝาม่วง)", "ลูกไหนแช่อิ่ม (ฝาเขียว)", "ลูกพลัมอบแห้ง (ฝาเขียว)", "บ๊วยชิ้นอบแห้ง (ฝาชมพู)", "บ๊วยอบแห้งรสสตรอเบอร์รี่ (ฝาชมพู)", "บ๊วยรสน้ำผึ้ง (ฝาชมพู)", "บ๊วยเค็ม (ฝาเขียว)", "บ๊วยรสหวาน (ฝาม่วง)", "บ๊วยห้ารส (ฝาเขียว)", "มะเขือราชินีอบแห้ง (ฝาเขียว)", "มะขาม 3 รส (ฝาเขียว)", "มะขามป้อมแช่อิ่ม (ฝาเขียว)", "เชอร์รี่แช่อิ่ม (ฝาเขียว)", "เชอร์รี่อบแห้ง (ฝาม่วง)"],
-        "🍬 ขนม": ["มันหนึบจิ๋ว", "มันหนึบชิ้นใหญ่", "ผักอบกรอบ (ถุงเขียว) 80 กรัม", "ผักอบกรอบ (ถุงม่วง) 100 กรัม", "ขนุนอบกรอบ", "หมึกบุกหม่าล่า", "เค้กหลันลี่", "เค้กไข่ยิ้ม", "เกาลัดมีเปลือก", "เกาลัดปอกเปลือก", "วอลนัท", "แครนเบอร์รี่ชีส (10 บาท)", "ช็อคบอล", "เยลลี่ผลไม้", "บ๊วย 2 บาท", "ตุ๊บตั๊บ", "ท้อแดง 3 บาท", "ข้าวโอ๊ต", "นูกัต", "บิสกิตแบน 4 บาท", "ปีโป้กรอบ", "เยลลี่", "โมจิ ช็อคโกแลตดูไบ"],
-        "❄️ ผลไม้แช่แข็ง": ["มิกซ์เบอร์รี่", "สตรอว์เบอร์รี่", "บลูเบอร์รี่", "ลิ้นจี่", "ลำไย", "ราสเบอร์รี่", "แครนเบอร์รี่", "มัลเบอร์รี่"],
-        "📦 บรรจุภัณฑ์": ["แก้วขาว", "แก้วดำ", "ฝา", "หลอดไม่ห่อฟิล์ม", "หลอดห่อฟิล์ม", "หลอดไข่มุก ห่อฟิล์ม สีดำ", "สายเดี่ยว", "ถุง grab", "ถุง 6x11", "ถุง 7x15"],
-        "🍪 ท็อปปิ้ง": ["ไข่มุก", "ผงโอริโอ้บดหยาบ", "ผงโอริโอ้บดละเอียด", "โอริโอ้", "ปีโป้", "วิปครีม"],
-        "☕ ผง": ["ครีมเทียม", "โกโก้", "ช็อคโกแลต", "ไมโล", "โอวัลติน", "ชาเขียว", "ชาไทย", "ชานม", "นมสด", "เผือก", "ลาเต้", "มอคค่า", "คาปูชิโน", "เอสเพรสโซ"]
-    };
-
-    let weightItems = [];
-    for (let cat in activeCategories) {
-        if (cat === "🍉 ผลไม้ (ใส่กล่อง)" || cat === "🍍 ผลไม้ (โชว์)") {
-            activeCategories[cat].forEach(item => { if (!["แตงโม", "สับปะรด", "กล้วยดิบ", "กล้วยสุก", "มะพร้าว (ลูก)"].includes(item)) weightItems.push(item); });
-        }
-    }
+    // 🌟 ดึงข้อมูลจากความจำเครื่องขึ้นมาใช้ (ลบรายชื่อตั้งต้นออกหมดแล้ว)
+    let activeCategories = JSON.parse(localStorage.getItem('boy_v4_database')) || {};
+    let weightItems = JSON.parse(localStorage.getItem('boy_v4_weights')) || [];
 
     let orderCart = {}; let receiveQty = {}; let receiveWgt = {}; let returnQty = {}; let returnWgt = {};
     let appState = { orderLocked: false, receiveLocked: false, returnLocked: true };
 
     function saveDB() { 
+        // เซฟลงเครื่องกันเหนียวไว้ก่อน
+        localStorage.setItem('boy_v4_database', JSON.stringify(activeCategories));
+        localStorage.setItem('boy_v4_weights', JSON.stringify(weightItems));
+        localStorage.setItem('boy_v4_mappings', JSON.stringify(window.itemMappings));
+        
+        // ดันขึ้น Cloud
         if (window.db && window.setDoc && window.doc) {
-            window.setDoc(window.doc(window.db, "system_settings", "master_database"), { categories: activeCategories, weightItems: weightItems, itemMappings: window.itemMappings });
+            window.setDoc(window.doc(window.db, "system_settings", "master_database"), { categories: activeCategories, weightItems: weightItems, itemMappings: window.itemMappings }, { merge: true });
         }
     }
 
@@ -268,16 +265,19 @@
         let allItems = []; Object.values(activeCategories).forEach(arr => allItems = allItems.concat(arr));
         defaultReturns.forEach(i => { if (returnQty[i] === undefined && allItems.includes(i)) returnQty[i] = 0; });
         renderOrder(); renderReceive(); renderReturn(); updateLocksUI(); 
+        
         const sel = document.getElementById('item-cat'); sel.innerHTML = ''; 
-        categoryOrder.forEach(cat => { if(activeCategories[cat]) sel.innerHTML += `<option value="${cat}">${cat}</option>`; }); 
+        // 🌟 ดึงรายชื่อหมวดหมู่มาโชว์ใน Dropdown 
+        categoryOrder.forEach(cat => { sel.innerHTML += `<option value="${cat}">${cat}</option>`; }); 
     }
 
     function showLoader(text) { document.getElementById('loader-msg').innerText = text; document.getElementById('cute-loader').style.display = 'flex'; }
     function hideLoader() { document.getElementById('cute-loader').style.display = 'none'; }
+    
     function copyDatabase() {
         let text = "📦 ฐานข้อมูลสินค้า\n\n";
         categoryOrder.forEach(cat => {
-            if(activeCategories[cat]) {
+            if(activeCategories[cat] && activeCategories[cat].length > 0) {
                 text += `[ ${cat} ]\n`;
                 activeCategories[cat].forEach(item => { 
                     let mapText = window.itemMappings[item] ? ` ➡️ [ลงชีท: ${window.itemMappings[item]}]` : "";
@@ -293,7 +293,6 @@
     function openManageModal() { document.getElementById('manage-modal').style.display = 'flex'; cancelEditMode(); renderManageList(); }
     function closeManageModal() { document.getElementById('manage-modal').style.display = 'none'; }
     
-    // 🌟 ระบบบันทึก Data Mapping คู่กับสินค้า
     function saveItemData() {
         const cat = document.getElementById('item-cat').value; const name = document.getElementById('item-name').value.trim(); const unit = document.getElementById('item-unit').value.trim(); 
         const sheetName = document.getElementById('item-sheet-name').value.trim(); const isWeight = document.getElementById('item-is-weight').checked;
@@ -434,7 +433,6 @@
         } catch (e) { alert("Error: " + e.message); } finally { hideLoader(); }
     }
     
-    // 🌟 ระบบแปลภาษา (Data Mapping) ก่อนส่งไป Sheet
     async function confirmReceive() {
         let finalData = {}; let hasData = false;
         document.querySelectorAll('#receive-container .swipe-card').forEach(card => {
