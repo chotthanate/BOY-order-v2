@@ -125,9 +125,10 @@
                 <h3 id="manage-form-title" style="margin:0 0 10px 0; font-size:16px; color:var(--primary);">➕ เพิ่มสินค้าใหม่</h3>
                 <select id="item-cat" class="form-control"></select>
                 <div style="display:flex; gap:10px;">
-                    <input type="text" id="item-name" class="form-control" placeholder="ชื่อสินค้า (เช่น ส้ม)">
-                    <input type="text" id="item-unit" class="form-control" placeholder="หน่วย (โหล)" style="width:100px;">
+                    <input type="text" id="item-name" class="form-control" placeholder="ชื่อ (โชว์บนเว็บ)">
+                    <input type="text" id="item-unit" class="form-control" placeholder="หน่วย" style="width:80px;">
                 </div>
+                <input type="text" id="item-sheet-name" class="form-control" placeholder="ชื่อที่จะลงชีท (ถ้ามี) เช่น แก้ว PP 22 Oz">
                 <label style="display:flex; align-items:center; gap:8px; margin-bottom:15px; font-size:14px; font-weight:bold; color:var(--danger);">
                     <input type="checkbox" id="item-is-weight" style="width:20px; height:20px;">
                     กรอกเลขเอง (ชั่งน้ำหนัก / กรัม)
@@ -185,15 +186,18 @@
     
     const dateKey = new Date().toLocaleDateString('en-CA');
     
+    let itemMappings = {}; // ตัวแปรเก็บคู่มือแปลชื่อ
+    window.itemMappings = itemMappings; // แปะไว้ให้ฟังก์ชันอื่นเรียกใช้ได้
     const masterDbRef = doc(db, "system_settings", "master_database");
     onSnapshot(masterDbRef, (docSnap) => {
         if (docSnap.exists()) {
             activeCategories = docSnap.data().categories;
             weightItems = docSnap.data().weightItems || [];
+            window.itemMappings = docSnap.data().itemMappings || {};
             if(document.getElementById('manage-modal').style.display === 'flex') renderManageList();
             renderOrder(); renderReceive(); renderReturn();
         } else {
-            setDoc(masterDbRef, { categories: activeCategories, weightItems: weightItems });
+            setDoc(masterDbRef, { categories: activeCategories, weightItems: weightItems, itemMappings: {} });
         }
     });
 
@@ -239,7 +243,11 @@
     let orderCart = {}; let receiveQty = {}; let receiveWgt = {}; let returnQty = {}; let returnWgt = {};
     let appState = { orderLocked: false, receiveLocked: false, returnLocked: true };
 
-    function saveDB() { if (window.db && window.setDoc && window.doc) window.setDoc(window.doc(window.db, "system_settings", "master_database"), { categories: activeCategories, weightItems: weightItems }); }
+    function saveDB() { 
+        if (window.db && window.setDoc && window.doc) {
+            window.setDoc(window.doc(window.db, "system_settings", "master_database"), { categories: activeCategories, weightItems: weightItems, itemMappings: window.itemMappings });
+        }
+    }
     function saveDailyDataToCloud() {
         if (window.db && window.setDoc && window.doc) {
             const dateStr = new Date().toLocaleDateString('en-CA');
@@ -270,7 +278,8 @@
     function openManageModal() { document.getElementById('manage-modal').style.display = 'flex'; cancelEditMode(); renderManageList(); }
     function closeManageModal() { document.getElementById('manage-modal').style.display = 'none'; }
     function saveItemData() {
-        const cat = document.getElementById('item-cat').value; const name = document.getElementById('item-name').value.trim(); const unit = document.getElementById('item-unit').value.trim(); const isWeight = document.getElementById('item-is-weight').checked;
+        const cat = document.getElementById('item-cat').value; const name = document.getElementById('item-name').value.trim(); const unit = document.getElementById('item-unit').value.trim(); 
+        const sheetName = document.getElementById('item-sheet-name').value.trim(); const isWeight = document.getElementById('item-is-weight').checked;
         if(!name) return alert("กรุณาใส่ชื่อสินค้าครับ");
         const fullName = unit ? `${name} (${unit})` : name;
         let allItems = []; Object.values(activeCategories).forEach(arr => allItems = allItems.concat(arr));
@@ -286,19 +295,29 @@
             }
             weightItems = weightItems.filter(i => i !== editingItem.oldName); 
             if (isWeight) weightItems.push(fullName);
+            if (editingItem.oldName !== fullName) delete window.itemMappings[editingItem.oldName];
         } else {
             if(!activeCategories[cat]) activeCategories[cat] = []; activeCategories[cat].push(fullName); if (isWeight) weightItems.push(fullName);
         }
         
+        if (sheetName) { window.itemMappings[fullName] = sheetName; } else { delete window.itemMappings[fullName]; }
         saveDB(); renderManageList(); renderOrder(); cancelEditMode();
     }
+
     function editItemBtn(cat, oldFullName) {
         editingItem = { cat: cat, oldName: oldFullName }; document.getElementById('manage-form-title').innerText = "✏️ แก้ไขสินค้า"; document.getElementById('item-cat').value = cat;
         let name = oldFullName; let unit = ""; let match = oldFullName.match(/(.*?)\s*\((.*?)\)$/); if (match) { name = match[1].trim(); unit = match[2].trim(); }
-        document.getElementById('item-name').value = name; document.getElementById('item-unit').value = unit; document.getElementById('item-is-weight').checked = weightItems.includes(oldFullName);
+        document.getElementById('item-name').value = name; document.getElementById('item-unit').value = unit; 
+        document.getElementById('item-sheet-name').value = window.itemMappings[oldFullName] || ""; 
+        document.getElementById('item-is-weight').checked = weightItems.includes(oldFullName);
         document.getElementById('btn-cancel-edit').style.display = 'block'; document.getElementById('manage-modal').querySelector('.scroll-area').scrollTop = 0; 
     }
-    function cancelEditMode() { editingItem = null; document.getElementById('manage-form-title').innerText = "➕ เพิ่มสินค้าใหม่"; document.getElementById('item-name').value = ''; document.getElementById('item-unit').value = ''; document.getElementById('item-is-weight').checked = false; document.getElementById('btn-cancel-edit').style.display = 'none'; }
+
+    function cancelEditMode() { 
+        editingItem = null; document.getElementById('manage-form-title').innerText = "➕ เพิ่มสินค้าใหม่"; 
+        document.getElementById('item-name').value = ''; document.getElementById('item-unit').value = ''; document.getElementById('item-sheet-name').value = ''; 
+        document.getElementById('item-is-weight').checked = false; document.getElementById('btn-cancel-edit').style.display = 'none'; 
+    }
     
     // 🌟 ระบบ Render ตารางจัดการ และ แถบเมนูลอย
     function renderManageList() {
@@ -408,7 +427,12 @@
             let itemName = card.querySelector('.item-id-name').innerText.trim();
             let wgtInput = card.querySelector('.weight-input'); let qtyInput = card.querySelector('.qty-input');
             let v = 0; if (wgtInput) v = parseFloat(wgtInput.value) || 0; else if (qtyInput) v = parseInt(qtyInput.value) || 0;
-            if (v > 0) { finalData[itemName] = v; hasData = true; }
+            if (v > 0) { 
+                let mappedName = window.itemMappings[itemName] ? window.itemMappings[itemName] : itemName;
+                if (weightItems.includes(itemName)) { mappedName = mappedName.replace(/\s*\(.*?\)$/, '') + " (กรัม)"; }
+                finalData[mappedName] = v; 
+                hasData = true; 
+            }
         });
         if(!hasData) return alert("ยังไม่ได้ใส่ยอดสินค้านะครับ");
         if(!confirm("ยืนยันรับสินค้า?")) return;
