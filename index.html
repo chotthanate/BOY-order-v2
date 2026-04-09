@@ -3,14 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>BOY | Order System V4.5</title>
+    <title>BOY | Order System V4.6</title>
     <style>
         :root { --primary: #4CAF50; --primary-dark: #388E3C; --secondary: #FF9800; --bg: #F4F9F4; --card-bg: #FFFFFF; --text: #333333; --danger: #F44336; }
         * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-        body { margin: 0; background-color: var(--bg); color: var(--text); padding-bottom: calc(100px + env(safe-area-inset-bottom)); -webkit-tap-highlight-color: transparent; overflow-x: hidden;}
-        header { background-color: var(--primary); color: white; padding: calc(15px + env(safe-area-inset-top)) 20px 15px; text-align: center; font-size: 20px; font-weight: bold; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        
+        /* 🌟 ขยายขนาดสำหรับจอคอม 1000px */
+        html { background-color: #e9ecef; } 
+        body { margin: 0 auto; max-width: 1000px; background-color: var(--bg); color: var(--text); padding-bottom: calc(100px + env(safe-area-inset-bottom)); -webkit-tap-highlight-color: transparent; overflow-x: hidden; min-height: 100vh; box-shadow: 0 0 20px rgba(0,0,0,0.05); }
+        header { background-color: var(--primary); color: white; padding: calc(15px + env(safe-area-inset-top)) 20px 15px; text-align: center; font-size: 20px; font-weight: bold; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 10px rgba(0,0,0,0.1); max-width: 1000px; margin: 0 auto; }
         .header-icon { position: absolute; right: 15px; top: calc(12px + env(safe-area-inset-top)); font-size: 22px; cursor: pointer; background: rgba(255,255,255,0.2); border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;}
-        .tab-menu { display: flex; background: white; position: sticky; top: calc(56px + env(safe-area-inset-top)); z-index: 99; border-bottom: 1px solid #eee; }
+        .tab-menu { display: flex; background: white; position: sticky; top: calc(56px + env(safe-area-inset-top)); z-index: 99; border-bottom: 1px solid #eee; max-width: 1000px; margin: 0 auto; }
+        
         .tab-btn { flex: 1; padding: 15px 0; border: none; background: none; font-size: 15px; color: #aaa; font-weight: bold; border-bottom: 3px solid transparent; }
         .tab-btn.active { color: var(--primary); border-bottom: 3px solid var(--primary); }
         .tab-content { display: none; padding: 15px; animation: fadeIn 0.3s; position: relative; min-height: 70vh; }
@@ -29,9 +33,11 @@
         .swipe-container { position: relative; border-radius: 12px; background: var(--danger); overflow: hidden; margin-bottom: 10px; touch-action: pan-y; }
         .swipe-background { position: absolute; top: 0; right: 0; bottom: 0; width: 80px; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; z-index: 1; }
         .swipe-card { background: var(--card-bg); z-index: 2; position: relative; width: 100%; border: 1px solid #eee; border-radius: 12px; transition: transform 0.2s; }
-        .cart-bar { position: fixed; bottom: 0; left: 0; right: 0; background: white; padding: 15px 20px calc(15px + env(safe-area-inset-bottom)); box-shadow: 0 -4px 15px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center; z-index: 90; }
+        
+        .cart-bar { position: fixed; bottom: 0; left: 0; right: 0; background: white; padding: 15px 20px calc(15px + env(safe-area-inset-bottom)); box-shadow: 0 -4px 15px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center; z-index: 90; max-width: 1000px; margin: 0 auto; }
         .modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 200; flex-direction: column; justify-content: flex-end; }
-        .modal-content { background: white; border-radius: 20px 20px 0 0; padding: 20px; max-height: 85vh; display: flex; flex-direction: column; }
+        .modal-content { background: white; border-radius: 20px 20px 0 0; padding: 20px; max-height: 85vh; display: flex; flex-direction: column; max-width: 1000px; margin: 0 auto; width: 100%; }
+        
         .scroll-area { overflow-y: auto; flex-grow: 1; padding-bottom: 20px; touch-action: pan-y; position: relative; }
         .btn-main { width: 100%; padding: 16px; border-radius: 12px; border: none; font-size: 16px; font-weight: bold; margin-bottom: 10px; color: white; cursor: pointer; }
         .form-control { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 16px; outline: none; margin-bottom: 10px;}
@@ -49,9 +55,10 @@
         .excel-table th { background: #f0f0f0; padding: 10px; text-align: left; border-bottom: 2px solid #ccc; color: #555; }
         .excel-table td { padding: 10px; border-bottom: 1px solid #eee; vertical-align: middle; }
         .excel-table tr:hover { background-color: #f9f9f9; }
-        .cat-header-row { background: #E8F5E9; color: var(--primary-dark); font-weight: bold; padding: 10px; text-align: left; scroll-margin-top: 60px; /* เว้นระยะให้แถบลอยตอนวาร์ป */ }
+        .cat-header-row { background: #E8F5E9; color: var(--primary-dark); font-weight: bold; padding: 10px; text-align: left; scroll-margin-top: 60px; }
         .btn-icon { background: #f0f0f0; border: none; width: 30px; height: 30px; border-radius: 6px; font-size: 14px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
 
+        /* 🌟 อนิเมชั่นแก้วน้ำปั่นน่ารักๆ */
         #cute-loader { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); backdrop-filter: blur(2px); z-index: 9999; justify-content: center; align-items: center; flex-direction: column; color: white; }
         @keyframes bounceLoader { 0%, 100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-20px) scale(1.1); } }
         .cup-icon { font-size: 60px; animation: bounceLoader 0.8s infinite alternate ease-in-out; text-shadow: 0 4px 10px rgba(0,0,0,0.3); }
@@ -63,7 +70,7 @@
 <div id="cute-loader"><div class="cup-icon">🥤</div><div class="loader-text" id="loader-msg">กำลังปั่นข้อมูล...</div></div>
 
 <header>
-    🥤 BOY | Order V4.5
+    🥤 BOY | Order V4.6
     <div class="header-icon" onclick="openManageModal()">⚙️</div>
 </header>
 
@@ -131,7 +138,7 @@
                 <input type="text" id="item-sheet-name" class="form-control" placeholder="ชื่อที่จะลงชีท (ถ้ามี) เช่น แก้ว PP 22 Oz">
                 <label style="display:flex; align-items:center; gap:8px; margin-bottom:15px; font-size:14px; font-weight:bold; color:var(--danger);">
                     <input type="checkbox" id="item-is-weight" style="width:20px; height:20px;">
-                    กรอกเลขเอง (ชั่งน้ำหนัก / กรัม)
+                    กรอกเลขเอง (บังคับชั่งน้ำหนัก / กรัม)
                 </label>
                 <div style="display:flex; gap:10px;">
                     <button class="btn-main" style="background:var(--primary); margin:0;" onclick="saveItemData()">💾 บันทึกขึ้น Cloud</button>
@@ -186,8 +193,8 @@
     
     const dateKey = new Date().toLocaleDateString('en-CA');
     
-    let itemMappings = {}; // ตัวแปรเก็บคู่มือแปลชื่อ
-    window.itemMappings = itemMappings; // แปะไว้ให้ฟังก์ชันอื่นเรียกใช้ได้
+    // 🌟 ระบบดึงฐานข้อมูลหลัก + คู่มือแปลชื่อ
+    let itemMappings = {}; window.itemMappings = itemMappings;
     const masterDbRef = doc(db, "system_settings", "master_database");
     onSnapshot(masterDbRef, (docSnap) => {
         if (docSnap.exists()) {
@@ -248,6 +255,7 @@
             window.setDoc(window.doc(window.db, "system_settings", "master_database"), { categories: activeCategories, weightItems: weightItems, itemMappings: window.itemMappings });
         }
     }
+
     function saveDailyDataToCloud() {
         if (window.db && window.setDoc && window.doc) {
             const dateStr = new Date().toLocaleDateString('en-CA');
@@ -269,7 +277,14 @@
     function copyDatabase() {
         let text = "📦 ฐานข้อมูลสินค้า\n\n";
         categoryOrder.forEach(cat => {
-            if(activeCategories[cat]) { text += `[ ${cat} ]\n`; activeCategories[cat].forEach(item => { text += `- ${item}${weightItems.includes(item) ? " (ชั่งน้ำหนัก)" : ""}\n`; }); text += "\n"; }
+            if(activeCategories[cat]) {
+                text += `[ ${cat} ]\n`;
+                activeCategories[cat].forEach(item => { 
+                    let mapText = window.itemMappings[item] ? ` ➡️ [ลงชีท: ${window.itemMappings[item]}]` : "";
+                    text += `- ${item}${weightItems.includes(item) ? " (ชั่งน้ำหนัก)" : ""}${mapText}\n`; 
+                });
+                text += "\n";
+            }
         });
         navigator.clipboard.writeText(text).then(() => alert("✅ คัดลอกฐานข้อมูลเรียบร้อย!")).catch(err => alert("ไม่สามารถคัดลอกได้: " + err));
     }
@@ -277,6 +292,8 @@
     let editingItem = null;
     function openManageModal() { document.getElementById('manage-modal').style.display = 'flex'; cancelEditMode(); renderManageList(); }
     function closeManageModal() { document.getElementById('manage-modal').style.display = 'none'; }
+    
+    // 🌟 ระบบบันทึก Data Mapping คู่กับสินค้า
     function saveItemData() {
         const cat = document.getElementById('item-cat').value; const name = document.getElementById('item-name').value.trim(); const unit = document.getElementById('item-unit').value.trim(); 
         const sheetName = document.getElementById('item-sheet-name').value.trim(); const isWeight = document.getElementById('item-is-weight').checked;
@@ -319,19 +336,16 @@
         document.getElementById('item-is-weight').checked = false; document.getElementById('btn-cancel-edit').style.display = 'none'; 
     }
     
-    // 🌟 ระบบ Render ตารางจัดการ และ แถบเมนูลอย
     function renderManageList() {
         const search = document.getElementById('manage-search').value.toLowerCase(); 
         const tbody = document.getElementById('manage-table-body'); tbody.innerHTML = '';
         const navContainer = document.getElementById('manage-category-nav'); navContainer.innerHTML = '';
 
-        // ถ้ามีการค้นหา ให้ซ่อนแถบเมนูลอย
         if(search) { navContainer.style.display = 'none'; } else { navContainer.style.display = 'flex'; }
 
         categoryOrder.forEach((cat, catIndex) => {
             if(!activeCategories[cat] || activeCategories[cat].length === 0) return;
             
-            // สร้างปุ่มในแถบเมนูลอย (ดึงเฉพาะคำแรกให้สั้นลง เช่น 🍉 ผลไม้)
             if(!search) {
                 const navBtn = document.createElement('button');
                 navBtn.className = 'cat-nav-btn';
@@ -343,7 +357,6 @@
                 navContainer.appendChild(navBtn);
             }
 
-            // แถบหัวข้อในตาราง (เพื่อใช้เป็นเป้าหมายตอน Scroll)
             let hasItemInSearch = false;
             let rowsHtml = '';
 
@@ -351,11 +364,11 @@
                 if (!search || item.toLowerCase().includes(search) || cat.toLowerCase().includes(search)) {
                     hasItemInSearch = true;
                     const isW = weightItems.includes(item) ? '<br><span style="color:var(--danger); font-size:10px; font-weight:bold;">⚖️ ชั่งน้ำหนัก</span>' : '';
-                    rowsHtml += `<tr><td><div style="font-weight:bold; color:var(--text);">${item}</div></td><td style="text-align:center; vertical-align:middle;">${isW}</td><td><div style="display:flex; gap:4px; justify-content:center;"><button class="btn-icon" onclick="moveItem('${cat}', ${idx}, -1)">⬆️</button><button class="btn-icon" onclick="moveItem('${cat}', ${idx}, 1)">⬇️</button><button class="btn-icon" style="background:#E3F2FD; color:#1976D2;" onclick="editItemBtn('${cat}', '${item}')">✏️</button><button class="btn-icon" style="background:#FFEBEE; color:var(--danger);" onclick="deleteItemBtn('${cat}', '${item}')">🗑️</button></div></td></tr>`;
+                    const mapText = window.itemMappings[item] ? `<div style="font-size:11px; color:var(--secondary);">➡️ ${window.itemMappings[item]}</div>` : '';
+                    rowsHtml += `<tr><td><div style="font-weight:bold; color:var(--text);">${item}</div>${mapText}</td><td style="text-align:center; vertical-align:middle;">${isW}</td><td><div style="display:flex; gap:4px; justify-content:center;"><button class="btn-icon" onclick="moveItem('${cat}', ${idx}, -1)">⬆️</button><button class="btn-icon" onclick="moveItem('${cat}', ${idx}, 1)">⬇️</button><button class="btn-icon" style="background:#E3F2FD; color:#1976D2;" onclick="editItemBtn('${cat}', '${item}')">✏️</button><button class="btn-icon" style="background:#FFEBEE; color:var(--danger);" onclick="deleteItemBtn('${cat}', '${item}')">🗑️</button></div></td></tr>`;
                 }
             });
 
-            // ใส่หัวข้อตารางก่อนใส่สินค้า
             if(hasItemInSearch) {
                 tbody.innerHTML += `<tr id="cat-target-${catIndex}" class="cat-header-row"><td colspan="3">${cat}</td></tr>`;
                 tbody.innerHTML += rowsHtml;
@@ -364,7 +377,7 @@
     }
     
     function moveItem(cat, idx, dir) { let items = activeCategories[cat]; let target = idx + dir; if (target >= 0 && target < items.length) { [items[idx], items[target]] = [items[target], items[idx]]; saveDB(); renderManageList(); renderOrder(); } }
-    function deleteItemBtn(cat, item) { if(confirm(`ลบ "${item}" ถาวรหรือไม่?`)) { activeCategories[cat] = activeCategories[cat].filter(i => i !== item); saveDB(); renderManageList(); renderOrder(); } }
+    function deleteItemBtn(cat, item) { if(confirm(`ลบ "${item}" ถาวรหรือไม่?`)) { activeCategories[cat] = activeCategories[cat].filter(i => i !== item); delete window.itemMappings[item]; saveDB(); renderManageList(); renderOrder(); } }
 
     function renderOrder() {
         const container = document.getElementById('order-container'); container.innerHTML = '';
@@ -421,6 +434,7 @@
         } catch (e) { alert("Error: " + e.message); } finally { hideLoader(); }
     }
     
+    // 🌟 ระบบแปลภาษา (Data Mapping) ก่อนส่งไป Sheet
     async function confirmReceive() {
         let finalData = {}; let hasData = false;
         document.querySelectorAll('#receive-container .swipe-card').forEach(card => {
@@ -450,7 +464,12 @@
             let itemName = card.querySelector('.item-id-name').innerText.trim();
             let wgtInput = card.querySelector('.weight-input'); let qtyInput = card.querySelector('.qty-input');
             let v = 0; if (wgtInput) v = parseFloat(wgtInput.value) || 0; else if (qtyInput) v = parseInt(qtyInput.value) || 0;
-            if (v > 0) { finalData[itemName] = v; hasData = true; }
+            if (v > 0) { 
+                let mappedName = window.itemMappings[itemName] ? window.itemMappings[itemName] : itemName;
+                if (weightItems.includes(itemName)) { mappedName = mappedName.replace(/\s*\(.*?\)$/, '') + " (กรัม)"; }
+                finalData[mappedName] = v; 
+                hasData = true; 
+            }
         });
         if(!hasData) return alert("ยังไม่ได้ใส่ยอดสินค้านะครับ");
         if(!confirm("ยืนยันคืนสินค้า?")) return;
