@@ -217,16 +217,38 @@
     onSnapshot(doc(db, "daily_orders", dateKey), (docSnap) => {
         if (docSnap.exists()) {
             const data = docSnap.data();
+            
+            // 1. ซิงค์ตะกร้าสั่งของ และส่งยอดไปหน้ารับของทันที
             if(data.cart) { 
                 let cloudCart = data.cart;
+                // อัปเดตยอดสั่งซื้อในเครื่อง
+                orderCart = {}; 
                 Object.keys(cloudCart).forEach(item => { if(cloudCart[item] > 0) orderCart[item] = cloudCart[item]; });
-                updateOrderTotal(); renderOrder();
-                Object.keys(cloudCart).forEach(item => { if(cloudCart[item] > 0 && receiveQty[item] === undefined) receiveQty[item] = cloudCart[item]; });
-                renderReceive();
+                updateOrderTotal(); 
+                renderOrder();
+
+                // 🌟 ตรรกะ "ล้างและทับ": ถ้ายังไม่ได้กดบันทึกรับของเข้าชีท ให้หน้ารับของล้างใหม่ตามยอดสั่งซื้อเป๊ะๆ
+                if (!appState.receiveLocked) {
+                    receiveQty = {}; // เคลียร์ของเก่าในหน้ารับสินค้าทิ้งก่อน
+                    Object.keys(cloudCart).forEach(item => {
+                        if(cloudCart[item] > 0) receiveQty[item] = cloudCart[item];
+                    });
+                }
             }
-            if(data.receiveQty) { receiveQty = data.receiveQty; receiveWgt = data.receiveWgt || {}; renderReceive(); }
-            if(data.returnQty) { returnQty = data.returnQty; returnWgt = data.returnWgt || {}; renderReturn(); }
+
+            // 2. ซิงค์ยอดรับสินค้า (กรณีเริ่มพิมพ์จำนวนรับของไปบ้างแล้ว ข้อมูลใน Cloud จะใหญ่กว่ายอดสั่ง)
+            if(data.receiveQty && Object.keys(data.receiveQty).length > 0) { 
+                receiveQty = data.receiveQty; 
+                receiveWgt = data.receiveWgt || {}; 
+            }
+            
+            // 3. ซิงค์ยอดคืน และสถานะการ Lock ปุ่ม
+            if(data.returnQty) { returnQty = data.returnQty; returnWgt = data.returnWgt || {}; }
             if(data.appState) { appState = data.appState; updateLocksUI(); }
+            
+            // สั่งให้หน้าจอวาดรายการใหม่ตามข้อมูลล่าสุด
+            renderReceive();
+            renderReturn();
         }
     });
 </script>
