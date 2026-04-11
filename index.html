@@ -3,12 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>BOY | Order System V4.9</title>
+    <title>BOY | Order System V5.0</title>
     <style>
         :root { --primary: #4CAF50; --primary-dark: #388E3C; --secondary: #FF9800; --bg: #F4F9F4; --card-bg: #FFFFFF; --text: #333333; --danger: #F44336; }
         * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
         
-        /* 🌟 ปรับขนาดจอคอมพิวเตอร์ให้พอดี (1000px) */
         html { background-color: #e9ecef; } 
         body { margin: 0 auto; max-width: 1000px; background-color: var(--bg); color: var(--text); padding-bottom: calc(100px + env(safe-area-inset-bottom)); -webkit-tap-highlight-color: transparent; overflow-x: hidden; min-height: 100vh; box-shadow: 0 0 20px rgba(0,0,0,0.05); }
         header { background-color: var(--primary); color: white; padding: calc(15px + env(safe-area-inset-top)) 20px 15px; text-align: center; font-size: 20px; font-weight: bold; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 10px rgba(0,0,0,0.1); max-width: 1000px; margin: 0 auto; }
@@ -67,7 +66,7 @@
 <div id="cute-loader"><div class="cup-icon">🥤</div><div class="loader-text" id="loader-msg">กำลังปั่นข้อมูล...</div></div>
 
 <header>
-    🥤 BOY | Order V4.9
+    🥤 BOY | Order V5.0
     <div class="header-icon" onclick="openManageModal()">⚙️</div>
 </header>
 
@@ -117,7 +116,7 @@
             <h2 style="margin:0; color:var(--primary-dark);">⚙️ จัดการฐานข้อมูล</h2>
             <button onclick="closeManageModal()" style="border:none; background:none; font-size:24px;">×</button>
         </div>
-        <div class="scroll-area">
+        <div id="manage-scroll-area" class="scroll-area">
             <div style="background:#f9f9f9; padding:15px; border-radius:12px; border:1px solid #eee; margin-bottom:20px;">
                 <h3 id="manage-form-title" style="margin:0 0 10px 0; font-size:16px; color:var(--primary);">➕ เพิ่มสินค้าใหม่</h3>
                 <select id="item-cat" class="form-control"></select>
@@ -138,7 +137,7 @@
             <div id="manage-category-nav" class="sticky-cat-nav"></div>
             <div style="overflow-x:auto;">
                 <table class="excel-table">
-                    <thead><tr><th>ชื่อสินค้า</th><th style="text-align:center; width:60px;">สถานะ</th><th style="text-align:center; width:100px;">จัดการ</th></tr></thead>
+                    <thead><tr><th>ชื่อสินค้า</th><th style="text-align:center; width:60px;">สถานะ</th><th style="text-align:center; width:120px;">จัดการ</th></tr></thead>
                     <tbody id="manage-table-body"></tbody>
                 </table>
             </div>
@@ -173,7 +172,6 @@
     
     const dateKey = new Date().toLocaleDateString('en-CA');
     
-    // 🌟 ฐานข้อมูล Master (ดึงข้อมูลถาวร)
     const masterDbRef = doc(db, "system_settings", "master_database");
     onSnapshot(masterDbRef, (docSnap) => {
         if (docSnap.exists()) {
@@ -188,7 +186,6 @@
         }
     });
 
-    // 🌟 ซิงค์รายวัน (Real-time Sync)
     onSnapshot(doc(db, "daily_orders", dateKey), (docSnap) => {
         if (docSnap.exists()) {
             const data = docSnap.data();
@@ -233,23 +230,26 @@
                 cart: orderCart, receiveQty: receiveQty, receiveWgt: receiveWgt, 
                 returnQty: returnQty, returnWgt: returnWgt, appState: appState, 
                 timestamp: new Date().toISOString() 
-            }); // 🌟 ไม่ใช้ Merge เพื่อให้ลบแล้วหายจริง
+            }); 
         }
     }
 
     function showLoader(text) { document.getElementById('loader-msg').innerText = text; document.getElementById('cute-loader').style.display = 'flex'; }
     function hideLoader() { document.getElementById('cute-loader').style.display = 'none'; }
 
-    // --- จัดการฐานข้อมูล ---
     let editingItem = null;
     function openManageModal() { document.getElementById('manage-modal').style.display = 'flex'; renderManageList(); }
     function closeManageModal() { document.getElementById('manage-modal').style.display = 'none'; }
     
     function saveItemData() {
-        const cat = document.getElementById('item-cat').value; const name = document.getElementById('item-name').value.trim(); const unit = document.getElementById('item-unit').value.trim(); 
-        const sheetName = document.getElementById('item-sheet-name').value.trim(); const isWeight = document.getElementById('item-is-weight').checked;
+        const cat = document.getElementById('item-cat').value; 
+        const name = document.getElementById('item-name').value.trim(); 
+        const unit = document.getElementById('item-unit').value.trim(); 
+        const sheetName = document.getElementById('item-sheet-name').value.trim(); 
+        const isWeight = document.getElementById('item-is-weight').checked;
         if(!name) return;
         const fullName = unit ? `${name} (${unit})` : name;
+        
         if (editingItem) { 
             if (editingItem.cat === cat) {
                 let idx = activeCategories[cat].indexOf(editingItem.oldName);
@@ -258,7 +258,7 @@
                 activeCategories[editingItem.cat] = activeCategories[editingItem.cat].filter(i => i !== editingItem.oldName);
                 if(!activeCategories[cat]) activeCategories[cat] = []; activeCategories[cat].push(fullName);
             }
-            weightItems = weightItems.filter(i => i !== editingItem.oldName); 
+            weightItems = weightItems.filter(i => i !== editingItem.oldName);
             if (editingItem.oldName !== fullName) delete window.itemMappings[editingItem.oldName];
         } else {
             if(!activeCategories[cat]) activeCategories[cat] = []; activeCategories[cat].push(fullName);
@@ -268,19 +268,27 @@
         saveDB(); cancelEditMode();
     }
 
+    // 🌟 ฟังก์ชันแก้ไขที่ปรับปรุงระบบจัดการ String ป้องกันปุ่มกดไม่ติด
     function editItemBtn(cat, oldFullName) {
-        editingItem = { cat: cat, oldName: oldFullName }; document.getElementById('manage-form-title').innerText = "✏️ แก้ไขสินค้า"; document.getElementById('item-cat').value = cat;
-        let name = oldFullName; let unit = ""; let match = oldFullName.match(/(.*?)\s*\((.*?)\)$/); if (match) { name = match[1].trim(); unit = match[2].trim(); }
-        document.getElementById('item-name').value = name; document.getElementById('item-unit').value = unit; 
+        editingItem = { cat: cat, oldName: oldFullName }; 
+        document.getElementById('manage-form-title').innerText = "✏️ แก้ไขสินค้า"; 
+        document.getElementById('item-cat').value = cat;
+        let name = oldFullName; let unit = ""; 
+        let match = oldFullName.match(/(.*?)\s*\((.*?)\)$/); 
+        if (match) { name = match[1].trim(); unit = match[2].trim(); }
+        document.getElementById('item-name').value = name; 
+        document.getElementById('item-unit').value = unit; 
         document.getElementById('item-sheet-name').value = window.itemMappings[oldFullName] || ""; 
         document.getElementById('item-is-weight').checked = weightItems.includes(oldFullName);
         document.getElementById('btn-cancel-edit').style.display = 'block';
+        document.getElementById('manage-scroll-area').scrollTop = 0; // เลื่อนขึ้นไปหน้าฟอร์ม
     }
 
-    function cancelEditMode() { editingItem = null; document.getElementById('item-name').value = ''; document.getElementById('item-unit').value = ''; document.getElementById('item-sheet-name').value = ''; document.getElementById('item-is-weight').checked = false; document.getElementById('btn-cancel-edit').style.display = 'none'; }
+    function cancelEditMode() { editingItem = null; document.getElementById('manage-form-title').innerText = "➕ เพิ่มสินค้าใหม่"; document.getElementById('item-name').value = ''; document.getElementById('item-unit').value = ''; document.getElementById('item-sheet-name').value = ''; document.getElementById('item-is-weight').checked = false; document.getElementById('btn-cancel-edit').style.display = 'none'; }
 
     function renderManageList() {
-        const search = document.getElementById('manage-search').value.toLowerCase(); const tbody = document.getElementById('manage-table-body'); tbody.innerHTML = '';
+        const search = document.getElementById('manage-search').value.toLowerCase(); 
+        const tbody = document.getElementById('manage-table-body'); tbody.innerHTML = '';
         const nav = document.getElementById('manage-category-nav'); nav.innerHTML = '';
         categoryOrder.forEach((cat, ci) => {
             if(!activeCategories[cat] || activeCategories[cat].length === 0) return;
@@ -288,7 +296,20 @@
             let rows = '';
             activeCategories[cat].forEach((item, idx) => {
                 if (!search || item.toLowerCase().includes(search)) {
-                    rows += `<tr><td><b>${item}</b>${window.itemMappings[item] ? `<br><small style="color:var(--secondary)">➡️ ${window.itemMappings[item]}</small>` : ''}</td><td style="text-align:center;">${weightItems.includes(item)?'⚖️':''}</td><td><div style="display:flex; gap:4px; justify-content:center;"><button class="btn-icon" onclick="moveItem('${cat}',${idx},-1)">⬆️</button><button class="btn-icon" onclick="moveItem('${cat}',${idx},1)">⬇️</button><button class="btn-icon" style="background:#E3F2FD; color:#1976D2;" onclick="editItemBtn('${cat}','${item.replace(/'/g, "\\'")}')">✏️</button><button class="btn-icon" style="color:var(--danger)" onclick="deleteItemBtn('${cat}','${item.replace(/'/g, "\\'")}')">🗑️</button></div></td></tr>`;
+                    // จัดการเครื่องหมาย ' เพื่อให้ JS ทำงานได้
+                    const safeItem = item.replace(/'/g, "\\'");
+                    rows += `<tr>
+                        <td><b>${item}</b>${window.itemMappings[item] ? `<br><small style="color:var(--secondary)">➡️ ${window.itemMappings[item]}</small>` : ''}</td>
+                        <td style="text-align:center;">${weightItems.includes(item)?'⚖️':''}</td>
+                        <td>
+                            <div style="display:flex; gap:4px; justify-content:center;">
+                                <button class="btn-icon" onclick="moveItem('${cat}',${idx},-1)">⬆️</button>
+                                <button class="btn-icon" onclick="moveItem('${cat}',${idx},1)">⬇️</button>
+                                <button class="btn-icon" style="background:#E3F2FD; color:#1976D2;" onclick="editItemBtn('${cat}','${safeItem}')">✏️</button>
+                                <button class="btn-icon" style="color:var(--danger)" onclick="deleteItemBtn('${cat}','${safeItem}')">🗑️</button>
+                            </div>
+                        </td>
+                    </tr>`;
                 }
             });
             if(rows) { tbody.innerHTML += `<tr id="cat-target-${ci}" class="cat-header-row"><td colspan="3">${cat}</td></tr>` + rows; }
@@ -298,7 +319,6 @@
     function moveItem(cat, idx, dir) { let items = activeCategories[cat]; let target = idx + dir; if (target >= 0 && target < items.length) { [items[idx], items[target]] = [items[target], items[idx]]; saveDB(); } }
     function deleteItemBtn(cat, item) { if(confirm(`ลบ "${item}"?`)) { activeCategories[cat] = activeCategories[cat].filter(i => i !== item); delete window.itemMappings[item]; saveDB(); } }
 
-    // --- สั่งของ ---
     function renderOrder() {
         const container = document.getElementById('order-container'); container.innerHTML = '';
         categoryOrder.forEach(cat => {
@@ -307,7 +327,7 @@
             const grid = document.createElement('div'); grid.className = 'grid';
             activeCategories[cat].forEach(item => {
                 const q = orderCart[item] || 0;
-                grid.innerHTML += `<div class="product-card"><div class="product-name" onclick="updateOrderQty('${item}', 1)">${item}</div><div class="controls"><button class="btn-minus" onclick="updateOrderQty('${item}', -1)" style="visibility:${q>0?'visible':'hidden'}">-</button><input type="number" class="qty-input" value="${q}" onchange="manualQty('${item}',this.value,'order')" onclick="this.select()"><button class="btn-plus" onclick="updateOrderQty('${item}', 1)">+</button></div></div>`;
+                grid.innerHTML += `<div class="product-card"><div class="product-name" onclick="updateOrderQty('${item.replace(/'/g, "\\'")}', 1)">${item}</div><div class="controls"><button class="btn-minus" onclick="updateOrderQty('${item.replace(/'/g, "\\'")}', -1)" style="visibility:${q>0?'visible':'hidden'}">-</button><input type="number" class="qty-input" value="${q}" onchange="manualQty('${item.replace(/'/g, "\\'")}',this.value,'order')" onclick="this.select()"><button class="btn-plus" onclick="updateOrderQty('${item.replace(/'/g, "\\'")}', 1)">+</button></div></div>`;
             }); container.appendChild(grid);
         }); updateOrderTotal();
     }
@@ -315,7 +335,6 @@
     function manualQty(item, val, type) { let n = parseInt(val) || 0; if(type==='order') orderCart[item]=n; else if(type==='receive') receiveQty[item]=n; else returnQty[item]=n; saveDailyDataToCloud(); }
     function updateOrderTotal() { document.getElementById('total-qty').innerText = Object.values(orderCart).reduce((a, b) => a + b, 0); }
 
-    // --- รับของ/คืนของ ---
     function renderReceive() {
         const container = document.getElementById('receive-container'); container.innerHTML = '';
         categoryOrder.forEach(cat => {
@@ -325,7 +344,8 @@
                 container.innerHTML += `<div class="category-title">${cat}</div>`;
                 items.forEach(item => {
                     const q = receiveQty[item] || 0; const w = receiveWgt[item] || "";
-                    container.innerHTML += `<div class="swipe-container"><div class="swipe-background">🗑️</div><div class="swipe-card" ontouchstart="swipeStart(event)" ontouchmove="swipeMove(event)" ontouchend="swipeEnd(event,'${item}','receive')"><div style="display:flex; justify-content:space-between; align-items:center; padding:12px;"><span class="item-id-name" style="font-weight:bold;">${item}</span>${weightItems.includes(item) ? `<input type="number" class="weight-input" style="width:100px" placeholder="กรัม" value="${w}" oninput="localWgt('${item}',this.value,'receive')" onchange="saveDailyDataToCloud()" onclick="this.select()">` : `<div class="controls"><button class="btn-minus" onclick="updateRecQty('${item}',-1)">-</button><input type="number" class="qty-input" value="${q}" onchange="manualQty('${item}',this.value,'receive')" onclick="this.select()"><button class="btn-plus" onclick="updateRecQty('${item}',1)">+</button></div>`}</div></div></div>`;
+                    const safeItem = item.replace(/'/g, "\\'");
+                    container.innerHTML += `<div class="swipe-container"><div class="swipe-background">🗑️</div><div class="swipe-card" ontouchstart="swipeStart(event)" ontouchmove="swipeMove(event)" ontouchend="swipeEnd(event,'${safeItem}','receive')"><div style="display:flex; justify-content:space-between; align-items:center; padding:12px;"><span class="item-id-name" style="font-weight:bold;">${item}</span>${weightItems.includes(item) ? `<input type="number" class="weight-input" style="width:100px" placeholder="กรัม" value="${w}" oninput="localWgt('${safeItem}',this.value,'receive')" onchange="saveDailyDataToCloud()" onclick="this.select()">` : `<div class="controls"><button class="btn-minus" onclick="updateRecQty('${safeItem}',-1)">-</button><input type="number" class="qty-input" value="${q}" onchange="manualQty('${safeItem}',this.value,'receive')" onclick="this.select()"><button class="btn-plus" onclick="updateRecQty('${safeItem}',1)">+</button></div>`}</div></div></div>`;
                 });
             }
         });
@@ -342,14 +362,14 @@
                 container.innerHTML += `<div class="category-title">${cat}</div>`;
                 items.forEach(item => {
                     const q = returnQty[item] || 0; const w = returnWgt[item] || "";
-                    container.innerHTML += `<div class="swipe-container"><div class="swipe-background">🗑️</div><div class="swipe-card" ontouchstart="swipeStart(event)" ontouchmove="swipeMove(event)" ontouchend="swipeEnd(event,'${item}','return')"><div style="display:flex; justify-content:space-between; align-items:center; padding:12px;"><span class="item-id-name" style="font-weight:bold;">${item}</span>${weightItems.includes(item) ? `<input type="number" class="weight-input" style="width:100px" placeholder="กรัม" value="${w}" oninput="localWgt('${item}',this.value,'return')" onchange="saveDailyDataToCloud()" onclick="this.select()">` : `<div class="controls"><button class="btn-minus" onclick="updateRetQty('${item}',-1)">-</button><input type="number" class="qty-input" value="${q}" onchange="manualQty('${item}',this.value,'return')" onclick="this.select()"><button class="btn-plus" onclick="updateRetQty('${item}',1)">+</button></div>`}</div></div></div>`;
+                    const safeItem = item.replace(/'/g, "\\'");
+                    container.innerHTML += `<div class="swipe-container"><div class="swipe-background">🗑️</div><div class="swipe-card" ontouchstart="swipeStart(event)" ontouchmove="swipeMove(event)" ontouchend="swipeEnd(event,'${safeItem}','return')"><div style="display:flex; justify-content:space-between; align-items:center; padding:12px;"><span class="item-id-name" style="font-weight:bold;">${item}</span>${weightItems.includes(item) ? `<input type="number" class="weight-input" style="width:100px" placeholder="กรัม" value="${w}" oninput="localWgt('${safeItem}',this.value,'return')" onchange="saveDailyDataToCloud()" onclick="this.select()">` : `<div class="controls"><button class="btn-minus" onclick="updateRetQty('${safeItem}',-1)">-</button><input type="number" class="qty-input" value="${q}" onchange="manualQty('${safeItem}',this.value,'return')" onclick="this.select()"><button class="btn-plus" onclick="updateRetQty('${safeItem}',1)">+</button></div>`}</div></div></div>`;
                 });
             }
         });
     }
     function updateRetQty(item, change) { returnQty[item] = Math.max(0, (returnQty[item] || 0) + change); renderReturn(); saveDailyDataToCloud(); }
 
-    // --- บันทึกเข้า Sheets ---
     async function saveAndSend() {
         showLoader("กำลังบันทึกรายการสินค้า");
         try {
@@ -399,7 +419,6 @@
         } catch(e) { alert("❌ Error: " + e.message); } finally { hideLoader(); }
     }
 
-    // --- Swipe & Tabs Logic ---
     let startX = 0, isSwiping = false;
     function swipeStart(e) { startX = e.touches[0].clientX; isSwiping = false; e.currentTarget.style.transition = 'none'; }
     function swipeMove(e) {
