@@ -233,10 +233,19 @@
         }
     }
 
+    // 🌟 ระบบบันทึกข้อมูล (แบบเซฟทับ 100% ลบแล้วหายจริง ไม่เอาไปผสมของเก่า)
     function saveDailyDataToCloud() {
-        if (window.db) {
+        if (window.db && window.setDoc && window.doc) {
             const dateStr = new Date().toLocaleDateString('en-CA');
-            window.setDoc(window.doc(window.db, "daily_orders", dateStr), { cart: orderCart, receiveQty: receiveQty, receiveWgt: receiveWgt, returnQty: returnQty, returnWgt: returnWgt, appState: appState, timestamp: new Date().toISOString() }, { merge: true });
+            window.setDoc(window.doc(window.db, "daily_orders", dateStr), { 
+                cart: orderCart, 
+                receiveQty: receiveQty, 
+                receiveWgt: receiveWgt, 
+                returnQty: returnQty, 
+                returnWgt: returnWgt, 
+                appState: appState, 
+                timestamp: new Date().toISOString() 
+            });
         }
     }
 
