@@ -328,19 +328,26 @@
                 container.innerHTML += `<div class="category-title">${cat}</div>`;
                 items.forEach(item => {
                     const q = receiveQty[item] || 0; const w = receiveWgt[item] || "";
-                    container.innerHTML += `<div class="swipe-container"><div class="swipe-background">🗑️</div><div class="swipe-card" ontouchstart="swipeStart(event)" ontouchend="swipeEnd(event,'${item}','receive')"><div style="display:flex; justify-content:space-between; align-items:center; padding:12px;"><span class="item-id-name" style="font-weight:bold;">${item}</span>${weightItems.includes(item) ? `<input type="number" class="weight-input" style="width:100px" placeholder="กรัม" value="${w}" oninput="localWgt('${item}',this.value,'receive')" onchange="saveDailyDataToCloud()" onclick="this.select()">` : `<div class="controls"><button class="btn-minus" onclick="updateRecQty('${item}',-1)">-</button><input type="number" class="qty-input" value="${q}" onchange="manualQty('${item}',this.value,'receive')" onclick="this.select()"><button class="btn-plus" onclick="updateRecQty('${item}',1)">+</button></div>`}</div></div></div>`;
+                    // 🌟 เพิ่ม ontouchmove เพื่อให้อนิเมชั่นขยับตามนิ้ว
+                    container.innerHTML += `<div class="swipe-container"><div class="swipe-background">🗑️</div><div class="swipe-card" ontouchstart="swipeStart(event)" ontouchmove="swipeMove(event)" ontouchend="swipeEnd(event,'${item}','receive')"><div style="display:flex; justify-content:space-between; align-items:center; padding:12px;"><span class="item-id-name" style="font-weight:bold;">${item}</span>${weightItems.includes(item) ? `<input type="number" class="weight-input" style="width:100px" placeholder="กรัม" value="${w}" oninput="localWgt('${item}',this.value,'receive')" onchange="saveDailyDataToCloud()" onclick="this.select()">` : `<div class="controls"><button class="btn-minus" onclick="updateRecQty('${item}',-1)">-</button><input type="number" class="qty-input" value="${q}" onchange="manualQty('${item}',this.value,'receive')" onclick="this.select()"><button class="btn-plus" onclick="updateRecQty('${item}',1)">+</button></div>`}</div></div></div>`;
                 });
             }
         });
     }
-    function updateRecQty(item, change) { receiveQty[item] = Math.max(0, (receiveQty[item] || 0) + change); saveDailyDataToCloud(); }
-    function localWgt(item, val, type) { if(type==='receive') receiveWgt[item]=val; else returnWgt[item]=val; }
 
     function renderReturn() {
         const container = document.getElementById('return-container'); container.innerHTML = '';
-        Object.keys(returnQty).forEach(item => {
-            const q = returnQty[item]; const w = returnWgt[item] || "";
-            container.innerHTML += `<div class="swipe-container"><div class="swipe-background">🗑️</div><div class="swipe-card" ontouchstart="swipeStart(event)" ontouchend="swipeEnd(event,'${item}','return')"><div style="display:flex; justify-content:space-between; align-items:center; padding:12px;"><span class="item-id-name" style="font-weight:bold;">${item}</span>${weightItems.includes(item) ? `<input type="number" class="weight-input" style="width:100px" placeholder="กรัม" value="${w}" oninput="localWgt('${item}',this.value,'return')" onchange="saveDailyDataToCloud()" onclick="this.select()">` : `<div class="controls"><button class="btn-minus" onclick="updateRetQty('${item}',-1)">-</button><input type="number" class="qty-input" value="${q}" onchange="manualQty('${item}',this.value,'return')" onclick="this.select()"><button class="btn-plus" onclick="updateRetQty('${item}',1)">+</button></div>`}</div></div></div>`;
+        // 🌟 แก้ไข: ไล่ตาม categoryOrder เพื่อไม่ให้รายการสลับที่กันมั่ว
+        categoryOrder.forEach(cat => {
+            if(!activeCategories[cat]) return;
+            const items = activeCategories[cat].filter(i => returnQty[i] !== undefined);
+            if(items.length > 0) {
+                container.innerHTML += `<div class="category-title">${cat}</div>`;
+                items.forEach(item => {
+                    const q = returnQty[item] || 0; const w = returnWgt[item] || "";
+                    container.innerHTML += `<div class="swipe-container"><div class="swipe-background">🗑️</div><div class="swipe-card" ontouchstart="swipeStart(event)" ontouchmove="swipeMove(event)" ontouchend="swipeEnd(event,'${item}','return')"><div style="display:flex; justify-content:space-between; align-items:center; padding:12px;"><span class="item-id-name" style="font-weight:bold;">${item}</span>${weightItems.includes(item) ? `<input type="number" class="weight-input" style="width:100px" placeholder="กรัม" value="${w}" oninput="localWgt('${item}',this.value,'return')" onchange="saveDailyDataToCloud()" onclick="this.select()">` : `<div class="controls"><button class="btn-minus" onclick="updateRetQty('${item}',-1)">-</button><input type="number" class="qty-input" value="${q}" onchange="manualQty('${item}',this.value,'return')" onclick="this.select()"><button class="btn-plus" onclick="updateRetQty('${item}',1)">+</button></div>`}</div></div></div>`;
+                });
+            }
         });
     }
     function updateRetQty(item, change) { returnQty[item] = Math.max(0, (returnQty[item] || 0) + change); saveDailyDataToCloud(); }
@@ -401,21 +408,43 @@
 
     // 🌟 เพิ่มระบบ Swipe Move กลับมา (ให้การ์ดขยับตามนิ้ว)
     let startX = 0, isSwiping = false;
-    function swipeStart(e) { startX = e.touches[0].clientX; isSwiping = false; e.currentTarget.style.transition = 'none'; }
+    function swipeStart(e) { 
+        startX = e.touches[0].clientX; 
+        isSwiping = false; 
+        e.currentTarget.style.transition = 'none'; 
+    }
+
     function swipeMove(e) {
         let dX = startX - e.touches[0].clientX;
-        if (dX > 20) {
+        if (dX > 10) {
             isSwiping = true;
-            e.currentTarget.style.transform = `translateX(-${Math.min(dX, 90)}px)`;
+            // 🌟 อนิเมชั่น: เลื่อนการ์ดตามนิ้ว
+            e.currentTarget.style.transform = `translateX(-${Math.min(dX, 100)}px)`;
         }
     }
+
     function swipeEnd(e, item, type) {
         let dX = startX - e.changedTouches[0].clientX;
-        e.currentTarget.style.transition = 'transform 0.2s ease';
-        if (dX > 70 && confirm(`ลบ "${item}" ออกจากหน้านี้?`)) {
-            if(type==='receive') delete receiveQty[item]; else delete returnQty[item];
-            saveDailyDataToCloud();
-        } else { e.currentTarget.style.transform = `translateX(0)`; }
+        e.currentTarget.style.transition = 'transform 0.3s ease';
+        
+        if (dX > 70) {
+            if (confirm(`ลบ "${item}" ออกจากหน้านี้?`)) {
+                if(type === 'receive') {
+                    delete receiveQty[item];
+                    delete receiveWgt[item];
+                } else {
+                    delete returnQty[item];
+                    delete returnWgt[item];
+                }
+                // 🌟 เซฟลง Cloud และสั่งวาดหน้าจอใหม่ทันที
+                saveDailyDataToCloud(); 
+                if(type === 'receive') renderReceive(); else renderReturn();
+            } else {
+                e.currentTarget.style.transform = `translateX(0)`;
+            }
+        } else {
+            e.currentTarget.style.transform = `translateX(0)`;
+        }
     }
     function switchTab(id) { document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active')); document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active')); document.getElementById(`tab-${id}`).classList.add('active'); document.getElementById(`tab-btn-${id}`).classList.add('active'); document.getElementById('cart-bar').style.display = id === 'order' ? 'flex' : 'none'; }
     function updateLocksUI() { document.getElementById('order-lock').style.display = appState.orderLocked ? 'flex' : 'none'; document.getElementById('receive-lock').style.display = appState.receiveLocked ? 'flex' : 'none'; document.getElementById('return-lock').style.display = appState.returnLocked ? 'flex' : 'none'; }
