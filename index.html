@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>BOY | Order System V5.3</title>
+    <title>BOY | Order System V5.4</title>
     <style>
         :root { --primary: #4CAF50; --primary-dark: #388E3C; --secondary: #FF9800; --bg: #F4F9F4; --card-bg: #FFFFFF; --text: #333333; --danger: #F44336; }
         * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
@@ -57,7 +57,7 @@
 <div id="cute-loader"><div class="cup-icon">🥤</div><div class="loader-text" id="loader-msg">กำลังปั่นข้อมูล...</div></div>
 
 <header>
-    🥤 BOY | Order V5.3
+    🥤 BOY | Order V5.4
     <div class="header-icon" onclick="openManageModal()">⚙️</div>
 </header>
 
@@ -187,12 +187,12 @@
             if(data.receiveQty) { receiveQty = data.receiveQty; receiveWgt = data.receiveWgt || {}; }
             if(data.appState) { appState = data.appState; updateLocksUI(); }
             
-            // 🌟 V5.3: เช็ครายการคืนของ เริ่มต้น 4 อย่าง (ทำแค่ 1 ครั้งต่อวัน)
-            if (!appState.returnsInitialized) {
-                returnQty = { "ส้ม (โหล)":0, "แตงโม (กล่อง)":0, "สับปะรด (ปั่น+สกัด) (กล่อง)":0, "อโวคาโด (กล่อง)":0 };
+            // 🌟 V5.4: แก้ชื่อสับปะรดให้ตรง และบังคับรีเซ็ตใหม่
+            if (!appState.initReturnsV5_4) {
+                returnQty = { "ส้ม (โหล)":0, "แตงโม (กล่อง)":0, "สับปะรด (สกัด+ปั่น) (กล่อง)":0, "อโวคาโด (กล่อง)":0 };
                 returnWgt = {};
-                appState.returnsInitialized = true;
-                saveDailyDataToCloud(); // เซฟการตั้งค่าเริ่มต้นขึ้น Cloud
+                appState.initReturnsV5_4 = true;
+                saveDailyDataToCloud(); 
             } else {
                 returnQty = data.returnQty || {}; 
                 returnWgt = data.returnWgt || {}; 
@@ -200,9 +200,9 @@
 
             renderReceive(); renderReturn();
         } else {
-            // 🌟 V5.3: ถ้าเป็นวันใหม่ ให้เซ็ตค่าเริ่มต้นทันที
-            returnQty = { "ส้ม (โหล)":0, "แตงโม (กล่อง)":0, "สับปะรด (ปั่น+สกัด) (กล่อง)":0, "อโวคาโด (กล่อง)":0 };
-            appState.returnsInitialized = true;
+            // 🌟 V5.4: ถ้าเป็นวันใหม่ ให้เซ็ตค่าเริ่มต้นทันที
+            returnQty = { "ส้ม (โหล)":0, "แตงโม (กล่อง)":0, "สับปะรด (สกัด+ปั่น) (กล่อง)":0, "อโวคาโด (กล่อง)":0 };
+            appState.initReturnsV5_4 = true;
             saveDailyDataToCloud();
         }
     });
@@ -216,7 +216,7 @@
     window.itemMappings = itemMappings;
 
     let orderCart = {}; let receiveQty = {}; let receiveWgt = {}; let returnQty = {}; let returnWgt = {};
-    let appState = { orderLocked: false, receiveLocked: false, returnLocked: true, returnsInitialized: false };
+    let appState = { orderLocked: false, receiveLocked: false, returnLocked: true, initReturnsV5_4: false };
 
     function saveDB() { 
         if (window.db) { window.setDoc(window.doc(window.db, "system_settings", "master_database"), { categories: activeCategories, weightItems: weightItems, itemMappings: window.itemMappings }, { merge: true }); }
