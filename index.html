@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>BOY | Order System V5.2</title>
+    <title>BOY | Order System V5.3</title>
     <style>
         :root { --primary: #4CAF50; --primary-dark: #388E3C; --secondary: #FF9800; --bg: #F4F9F4; --card-bg: #FFFFFF; --text: #333333; --danger: #F44336; }
         * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
@@ -57,7 +57,7 @@
 <div id="cute-loader"><div class="cup-icon">🥤</div><div class="loader-text" id="loader-msg">กำลังปั่นข้อมูล...</div></div>
 
 <header>
-    🥤 BOY | Order V5.2
+    🥤 BOY | Order V5.3
     <div class="header-icon" onclick="openManageModal()">⚙️</div>
 </header>
 
@@ -185,20 +185,24 @@
                 updateOrderTotal(); renderOrder();
             }
             if(data.receiveQty) { receiveQty = data.receiveQty; receiveWgt = data.receiveWgt || {}; }
+            if(data.appState) { appState = data.appState; updateLocksUI(); }
             
-            // 🌟 เช็ครายการคืนของ เริ่มต้น 4 อย่าง (แต่ถ้าปัดลบทิ้ง จะไม่เด้งกลับมาอีก)
-            if(!data.returnQty) { 
-                returnQty = { "ส้ม (โหล)":0, "แตงโม (กล่อง)":0, "สับปะรด (ปั่น+สกัด) (กล่อง)":0, "อโวคาโด (กล่อง)":0 }; 
-                returnWgt = {}; saveDailyDataToCloud(); 
-            } else { 
-                returnQty = data.returnQty; returnWgt = data.returnWgt || {}; 
+            // 🌟 V5.3: เช็ครายการคืนของ เริ่มต้น 4 อย่าง (ทำแค่ 1 ครั้งต่อวัน)
+            if (!appState.returnsInitialized) {
+                returnQty = { "ส้ม (โหล)":0, "แตงโม (กล่อง)":0, "สับปะรด (ปั่น+สกัด) (กล่อง)":0, "อโวคาโด (กล่อง)":0 };
+                returnWgt = {};
+                appState.returnsInitialized = true;
+                saveDailyDataToCloud(); // เซฟการตั้งค่าเริ่มต้นขึ้น Cloud
+            } else {
+                returnQty = data.returnQty || {}; 
+                returnWgt = data.returnWgt || {}; 
             }
 
-            if(data.appState) { appState = data.appState; updateLocksUI(); }
             renderReceive(); renderReturn();
         } else {
-            // ถ้าเป็นวันใหม่ ให้เซ็ตค่าเริ่มต้น
+            // 🌟 V5.3: ถ้าเป็นวันใหม่ ให้เซ็ตค่าเริ่มต้นทันที
             returnQty = { "ส้ม (โหล)":0, "แตงโม (กล่อง)":0, "สับปะรด (ปั่น+สกัด) (กล่อง)":0, "อโวคาโด (กล่อง)":0 };
+            appState.returnsInitialized = true;
             saveDailyDataToCloud();
         }
     });
@@ -212,7 +216,7 @@
     window.itemMappings = itemMappings;
 
     let orderCart = {}; let receiveQty = {}; let receiveWgt = {}; let returnQty = {}; let returnWgt = {};
-    let appState = { orderLocked: false, receiveLocked: false, returnLocked: true };
+    let appState = { orderLocked: false, receiveLocked: false, returnLocked: true, returnsInitialized: false };
 
     function saveDB() { 
         if (window.db) { window.setDoc(window.doc(window.db, "system_settings", "master_database"), { categories: activeCategories, weightItems: weightItems, itemMappings: window.itemMappings }, { merge: true }); }
@@ -342,10 +346,9 @@
     async function saveAndSend() {
         showLoader("กำลังบันทึกรายการสินค้า");
         try {
-            // 🌟 Active Push บังคับยัดเข้าหน้ารับของ
             receiveQty = {}; 
             Object.keys(orderCart).forEach(k => { if(orderCart[k] > 0) receiveQty[k] = orderCart[k]; });
-            appState.receiveLocked = false; // ปลดล็อกหน้ารับของเสมอเมื่อสั่งใหม่
+            appState.receiveLocked = false; 
             saveDailyDataToCloud();
             
             await fetch(WEBHOOK_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: 'order', qtyData: orderCart, categories: activeCategories }) });
@@ -405,7 +408,7 @@
         document.getElementById(`tab-${id}`).classList.add('active'); 
         document.getElementById(`tab-btn-${id}`).classList.add('active'); 
         document.getElementById('cart-bar').style.display = id === 'order' ? 'flex' : 'none';
-        window.scrollTo(0, 0); // 🌟 กลับไปบนสุดของหน้าเสมอ
+        window.scrollTo(0, 0); // 🌟 กลับไปบนสุดเสมอ
     }
 
     function updateLocksUI() { document.getElementById('order-lock').style.display = appState.orderLocked ? 'flex' : 'none'; document.getElementById('receive-lock').style.display = appState.receiveLocked ? 'flex' : 'none'; document.getElementById('return-lock').style.display = appState.returnLocked ? 'flex' : 'none'; }
@@ -418,7 +421,6 @@
         categoryOrder.forEach(c => { if(activeCategories[c]) activeCategories[c].filter(i => i.toLowerCase().includes(v.toLowerCase())).forEach(m => { 
             const d = document.createElement('div'); d.innerText = m; d.onclick = () => { 
                 receiveQty[m] = 0; saveDailyDataToCloud(); renderReceive(); l.innerHTML = ''; document.getElementById('receive-search').value = '';
-                // 🌟 เลื่อนอัตโนมัติไปที่สินค้าใหม่
                 setTimeout(() => { const target = document.getElementById(`item-rec-${m.replace(/'/g, "\\'")}`); if(target) target.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 100);
             }; l.appendChild(d); 
         }); }); 
@@ -428,7 +430,6 @@
         categoryOrder.forEach(c => { if(activeCategories[c]) activeCategories[c].filter(i => i.toLowerCase().includes(v.toLowerCase())).forEach(m => { 
             const d = document.createElement('div'); d.innerText = m; d.onclick = () => { 
                 returnQty[m] = 0; saveDailyDataToCloud(); renderReturn(); l.innerHTML = ''; document.getElementById('return-search').value = '';
-                // 🌟 เลื่อนอัตโนมัติไปที่สินค้าใหม่
                 setTimeout(() => { const target = document.getElementById(`item-ret-${m.replace(/'/g, "\\'")}`); if(target) target.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 100);
             }; l.appendChild(d); 
         }); }); 
