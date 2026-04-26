@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>BOY | Order System V5.1</title>
+    <title>BOY | Order System V5.2</title>
     <style>
         :root { --primary: #4CAF50; --primary-dark: #388E3C; --secondary: #FF9800; --bg: #F4F9F4; --card-bg: #FFFFFF; --text: #333333; --danger: #F44336; }
         * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
@@ -57,7 +57,7 @@
 <div id="cute-loader"><div class="cup-icon">🥤</div><div class="loader-text" id="loader-msg">กำลังปั่นข้อมูล...</div></div>
 
 <header>
-    🥤 BOY | Order V5.1
+    🥤 BOY | Order V5.2
     <div class="header-icon" onclick="openManageModal()">⚙️</div>
 </header>
 
@@ -117,7 +117,7 @@
                 </div>
                 <input type="text" id="item-sheet-name" class="form-control" placeholder="ชื่อที่จะลงชีท (ถ้ามี)">
                 <label style="display:flex; align-items:center; gap:8px; margin-bottom:15px; font-size:14px; font-weight:bold; color:var(--danger);">
-                    <input type="checkbox" id="item-is-weight" style="width:20px; height:20px;"> กรอกเลขเอง (ชั่งน้ำหนัก / กรัม)
+                    <input type="checkbox" id="item-is-weight" style="width:20px; height:20px;"> กรอกเลขเอง (ชั่งน้ำหนัก / กิโลกรัม)
                 </label>
                 <div style="display:flex; gap:10px;">
                     <button class="btn-main" style="background:var(--primary); margin:0;" onclick="saveItemData()">💾 บันทึกขึ้น Cloud</button>
@@ -163,7 +163,6 @@
     
     const dateKey = new Date().toLocaleDateString('en-CA');
     
-    // 🌟 ระบบ Master Database
     onSnapshot(doc(db, "system_settings", "master_database"), (docSnap) => {
         if (docSnap.exists()) {
             activeCategories = docSnap.data().categories || {};
@@ -177,7 +176,6 @@
         }
     });
 
-    // 🌟 ระบบซิงค์ข้อมูลรายวัน (แก้มหาบัคของไม่โผล่)
     onSnapshot(doc(db, "daily_orders", dateKey), (docSnap) => {
         if (docSnap.exists()) {
             const data = docSnap.data();
@@ -186,11 +184,22 @@
                 Object.keys(data.cart).forEach(item => { if(data.cart[item] > 0) orderCart[item] = data.cart[item]; });
                 updateOrderTotal(); renderOrder();
             }
-            // 🌟 สำคัญ: ถ้าใน Cloud มีข้อมูล receiveQty ให้โชว์ทันที
             if(data.receiveQty) { receiveQty = data.receiveQty; receiveWgt = data.receiveWgt || {}; }
-            if(data.returnQty) { returnQty = data.returnQty; returnWgt = data.returnWgt || {}; }
+            
+            // 🌟 เช็ครายการคืนของ เริ่มต้น 4 อย่าง (แต่ถ้าปัดลบทิ้ง จะไม่เด้งกลับมาอีก)
+            if(!data.returnQty) { 
+                returnQty = { "ส้ม (โหล)":0, "แตงโม (กล่อง)":0, "สับปะรด (ปั่น+สกัด) (กล่อง)":0, "อโวคาโด (กล่อง)":0 }; 
+                returnWgt = {}; saveDailyDataToCloud(); 
+            } else { 
+                returnQty = data.returnQty; returnWgt = data.returnWgt || {}; 
+            }
+
             if(data.appState) { appState = data.appState; updateLocksUI(); }
             renderReceive(); renderReturn();
+        } else {
+            // ถ้าเป็นวันใหม่ ให้เซ็ตค่าเริ่มต้น
+            returnQty = { "ส้ม (โหล)":0, "แตงโม (กล่อง)":0, "สับปะรด (ปั่น+สกัด) (กล่อง)":0, "อโวคาโด (กล่อง)":0 };
+            saveDailyDataToCloud();
         }
     });
 </script>
@@ -223,17 +232,13 @@
     function showLoader(text) { document.getElementById('loader-msg').innerText = text; document.getElementById('cute-loader').style.display = 'flex'; }
     function hideLoader() { document.getElementById('cute-loader').style.display = 'none'; }
 
-    // --- ส่วนจัดการหลังบ้าน ---
     let editingItem = null;
     function openManageModal() { document.getElementById('manage-modal').style.display = 'flex'; renderManageList(); }
     function closeManageModal() { document.getElementById('manage-modal').style.display = 'none'; }
     
     function saveItemData() {
-        const cat = document.getElementById('item-cat').value; 
-        const name = document.getElementById('item-name').value.trim(); 
-        const unit = document.getElementById('item-unit').value.trim(); 
-        const sheetName = document.getElementById('item-sheet-name').value.trim(); 
-        const isWeight = document.getElementById('item-is-weight').checked;
+        const cat = document.getElementById('item-cat').value; const name = document.getElementById('item-name').value.trim(); const unit = document.getElementById('item-unit').value.trim(); 
+        const sheetName = document.getElementById('item-sheet-name').value.trim(); const isWeight = document.getElementById('item-is-weight').checked;
         if(!name) return;
         const fullName = unit ? `${name} (${unit})` : name;
         if (editingItem) { 
@@ -255,25 +260,18 @@
     }
 
     function editItemBtn(cat, oldFullName) {
-        editingItem = { cat: cat, oldName: oldFullName }; 
-        document.getElementById('manage-form-title').innerText = "✏️ แก้ไขสินค้า"; 
-        document.getElementById('item-cat').value = cat;
-        let name = oldFullName; let unit = ""; 
-        let match = oldFullName.match(/(.*?)\s*\((.*?)\)$/); 
-        if (match) { name = match[1].trim(); unit = match[2].trim(); }
-        document.getElementById('item-name').value = name; 
-        document.getElementById('item-unit').value = unit; 
+        editingItem = { cat: cat, oldName: oldFullName }; document.getElementById('manage-form-title').innerText = "✏️ แก้ไขสินค้า"; document.getElementById('item-cat').value = cat;
+        let name = oldFullName; let unit = ""; let match = oldFullName.match(/(.*?)\s*\((.*?)\)$/); if (match) { name = match[1].trim(); unit = match[2].trim(); }
+        document.getElementById('item-name').value = name; document.getElementById('item-unit').value = unit; 
         document.getElementById('item-sheet-name').value = window.itemMappings[oldFullName] || ""; 
         document.getElementById('item-is-weight').checked = weightItems.includes(oldFullName);
-        document.getElementById('btn-cancel-edit').style.display = 'block';
-        document.getElementById('manage-scroll-area').scrollTop = 0;
+        document.getElementById('btn-cancel-edit').style.display = 'block'; document.getElementById('manage-scroll-area').scrollTop = 0;
     }
 
     function cancelEditMode() { editingItem = null; document.getElementById('manage-form-title').innerText = "➕ เพิ่มสินค้าใหม่"; document.getElementById('item-name').value = ''; document.getElementById('item-unit').value = ''; document.getElementById('item-sheet-name').value = ''; document.getElementById('item-is-weight').checked = false; document.getElementById('btn-cancel-edit').style.display = 'none'; }
 
     function renderManageList() {
-        const search = document.getElementById('manage-search').value.toLowerCase(); 
-        const tbody = document.getElementById('manage-table-body'); tbody.innerHTML = '';
+        const search = document.getElementById('manage-search').value.toLowerCase(); const tbody = document.getElementById('manage-table-body'); tbody.innerHTML = '';
         const nav = document.getElementById('manage-category-nav'); nav.innerHTML = '';
         categoryOrder.forEach((cat, ci) => {
             if(!activeCategories[cat] || activeCategories[cat].length === 0) return;
@@ -292,7 +290,6 @@
     function moveItem(cat, idx, dir) { let items = activeCategories[cat]; let target = idx + dir; if (target >= 0 && target < items.length) { [items[idx], items[target]] = [items[target], items[idx]]; saveDB(); } }
     function deleteItemBtn(cat, item) { if(confirm(`ลบ "${item}"?`)) { activeCategories[cat] = activeCategories[cat].filter(i => i !== item); delete window.itemMappings[item]; saveDB(); } }
 
-    // --- ส่วนสั่งของ ---
     function renderOrder() {
         const container = document.getElementById('order-container'); container.innerHTML = '';
         categoryOrder.forEach(cat => {
@@ -309,7 +306,6 @@
     function manualQty(item, val, type) { let n = parseInt(val) || 0; if(type==='order') orderCart[item]=n; else if(type==='receive') receiveQty[item]=n; else returnQty[item]=n; saveDailyDataToCloud(); }
     function updateOrderTotal() { document.getElementById('total-qty').innerText = Object.values(orderCart).reduce((a, b) => a + b, 0); }
 
-    // --- ส่วนรับของ/คืนของ ---
     function renderReceive() {
         const container = document.getElementById('receive-container'); container.innerHTML = '';
         categoryOrder.forEach(cat => {
@@ -319,7 +315,7 @@
                 container.innerHTML += `<div class="category-title">${cat}</div>`;
                 items.forEach(item => {
                     const q = receiveQty[item] || 0; const w = receiveWgt[item] || ""; const safeItem = item.replace(/'/g, "\\'");
-                    container.innerHTML += `<div class="swipe-container"><div class="swipe-background">🗑️</div><div class="swipe-card" ontouchstart="swipeStart(event)" ontouchmove="swipeMove(event)" ontouchend="swipeEnd(event,'${safeItem}','receive')"><div style="display:flex; justify-content:space-between; align-items:center; padding:12px;"><span class="item-id-name" style="font-weight:bold;">${item}</span>${weightItems.includes(item) ? `<input type="number" class="weight-input" style="width:100px" placeholder="กรัม" value="${w}" oninput="localWgt('${safeItem}',this.value,'receive')" onchange="saveDailyDataToCloud()" onclick="this.select()">` : `<div class="controls"><button class="btn-minus" onclick="updateRecQty('${safeItem}',-1)">-</button><input type="number" class="qty-input" value="${q}" onchange="manualQty('${safeItem}',this.value,'receive')" onclick="this.select()"><button class="btn-plus" onclick="updateRecQty('${safeItem}',1)">+</button></div>`}</div></div></div>`;
+                    container.innerHTML += `<div id="item-rec-${safeItem}" class="swipe-container"><div class="swipe-background">🗑️</div><div class="swipe-card" ontouchstart="swipeStart(event)" ontouchmove="swipeMove(event)" ontouchend="swipeEnd(event,'${safeItem}','receive')"><div style="display:flex; justify-content:space-between; align-items:center; padding:12px;"><span class="item-id-name" style="font-weight:bold;">${item}</span>${weightItems.includes(item) ? `<input type="number" class="weight-input" style="width:120px" placeholder="กิโลกรัม" value="${w}" oninput="localWgt('${safeItem}',this.value,'receive')" onchange="saveDailyDataToCloud()" onclick="this.select()">` : `<div class="controls"><button class="btn-minus" onclick="updateRecQty('${safeItem}',-1)">-</button><input type="number" class="qty-input" value="${q}" onchange="manualQty('${safeItem}',this.value,'receive')" onclick="this.select()"><button class="btn-plus" onclick="updateRecQty('${safeItem}', 1)">+</button></div>`}</div></div></div>`;
                 });
             }
         });
@@ -336,20 +332,20 @@
                 container.innerHTML += `<div class="category-title">${cat}</div>`;
                 items.forEach(item => {
                     const q = returnQty[item] || 0; const w = returnWgt[item] || ""; const safeItem = item.replace(/'/g, "\\'");
-                    container.innerHTML += `<div class="swipe-container"><div class="swipe-background">🗑️</div><div class="swipe-card" ontouchstart="swipeStart(event)" ontouchmove="swipeMove(event)" ontouchend="swipeEnd(event,'${safeItem}','return')"><div style="display:flex; justify-content:space-between; align-items:center; padding:12px;"><span class="item-id-name" style="font-weight:bold;">${item}</span>${weightItems.includes(item) ? `<input type="number" class="weight-input" style="width:100px" placeholder="กรัม" value="${w}" oninput="localWgt('${safeItem}',this.value,'return')" onchange="saveDailyDataToCloud()" onclick="this.select()">` : `<div class="controls"><button class="btn-minus" onclick="updateRetQty('${safeItem}',-1)">-</button><input type="number" class="qty-input" value="${q}" onchange="manualQty('${safeItem}',this.value,'return')" onclick="this.select()"><button class="btn-plus" onclick="updateRetQty('${safeItem}',1)">+</button></div>`}</div></div></div>`;
+                    container.innerHTML += `<div id="item-ret-${safeItem}" class="swipe-container"><div class="swipe-background">🗑️</div><div class="swipe-card" ontouchstart="swipeStart(event)" ontouchmove="swipeMove(event)" ontouchend="swipeEnd(event,'${safeItem}','return')"><div style="display:flex; justify-content:space-between; align-items:center; padding:12px;"><span class="item-id-name" style="font-weight:bold;">${item}</span>${weightItems.includes(item) ? `<input type="number" class="weight-input" style="width:120px" placeholder="กิโลกรัม" value="${w}" oninput="localWgt('${safeItem}',this.value,'return')" onchange="saveDailyDataToCloud()" onclick="this.select()">` : `<div class="controls"><button class="btn-minus" onclick="updateRetQty('${safeItem}',-1)">-</button><input type="number" class="qty-input" value="${q}" onchange="manualQty('${safeItem}',this.value,'return')" onclick="this.select()"><button class="btn-plus" onclick="updateRetQty('${safeItem}', 1)">+</button></div>`}</div></div></div>`;
                 });
             }
         });
     }
     function updateRetQty(item, change) { returnQty[item] = Math.max(0, (returnQty[item] || 0) + change); renderReturn(); saveDailyDataToCloud(); }
 
-    // --- ระบบยืนยันรายการสินค้า (Active Push) ---
     async function saveAndSend() {
         showLoader("กำลังบันทึกรายการสินค้า");
         try {
-            // 🌟 บังคับก๊อปปี้ออเดอร์ไปหน้ารับของทันทีใน Cloud
-            receiveQty = {};
+            // 🌟 Active Push บังคับยัดเข้าหน้ารับของ
+            receiveQty = {}; 
             Object.keys(orderCart).forEach(k => { if(orderCart[k] > 0) receiveQty[k] = orderCart[k]; });
+            appState.receiveLocked = false; // ปลดล็อกหน้ารับของเสมอเมื่อสั่งใหม่
             saveDailyDataToCloud();
             
             await fetch(WEBHOOK_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: 'order', qtyData: orderCart, categories: activeCategories }) });
@@ -364,14 +360,14 @@
             let v = weightItems.includes(itemName) ? (parseFloat(card.querySelector('.weight-input')?.value) || 0) : (parseInt(card.querySelector('.qty-input')?.value) || 0);
             if (v > 0) { 
                 let name = window.itemMappings[itemName] || itemName;
-                if (weightItems.includes(itemName)) name = name.replace(/\s*\(.*?\)$/, '') + " (กรัม)";
+                if (weightItems.includes(itemName)) name = name.replace(/\s*\(.*?\)$/, '') + " (กิโลกรัม)";
                 finalData[name] = v; hasData = true; 
             }
         });
         if(!hasData) return alert("กรุณาใส่จำนวนสินค้าครับ");
         showLoader("กำลังบันทึกรายการสินค้า");
         try {
-            await fetch(WEBHOOK_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: 'receive', qtyData: finalData, weightItems: weightItems }) });
+            await fetch(WEBHOOK_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: 'receive', qtyData: finalData }) });
             alert("✅ บันทึกรับสินค้าเข้าชีทสำเร็จ!"); appState.receiveLocked = true; appState.returnLocked = false; saveDailyDataToCloud(); switchTab('return');
         } catch(e) { alert("❌ Error: " + e.message); } finally { hideLoader(); }
     }
@@ -383,42 +379,60 @@
             let v = weightItems.includes(itemName) ? (parseFloat(card.querySelector('.weight-input')?.value) || 0) : (parseInt(card.querySelector('.qty-input')?.value) || 0);
             if (v > 0) { 
                 let name = window.itemMappings[itemName] || itemName;
-                if (weightItems.includes(itemName)) name = name.replace(/\s*\(.*?\)$/, '') + " (กรัม)";
+                if (weightItems.includes(itemName)) name = name.replace(/\s*\(.*?\)$/, '') + " (กิโลกรัม)";
                 finalData[name] = v; hasData = true; 
             }
         });
         if(!hasData) return alert("กรุณาใส่จำนวนสินค้าครับ");
         showLoader("กำลังบันทึกรายการสินค้า");
         try {
-            await fetch(WEBHOOK_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: 'return', qtyData: finalData, weightItems: weightItems }) });
+            await fetch(WEBHOOK_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: 'return', qtyData: finalData }) });
             alert("✅ บันทึกคืนสินค้าเข้าชีทสำเร็จ!"); Object.keys(returnQty).forEach(k => returnQty[k] = 0); saveDailyDataToCloud();
         } catch(e) { alert("❌ Error: " + e.message); } finally { hideLoader(); }
     }
 
-    // --- Swipe & Tabs Logic ---
     let startX = 0, isSwiping = false;
     function swipeStart(e) { startX = e.touches[0].clientX; isSwiping = false; e.currentTarget.style.transition = 'none'; }
-    function swipeMove(e) {
-        let dX = startX - e.touches[0].clientX;
-        if (dX > 10) { isSwiping = true; e.currentTarget.style.transform = `translateX(-${Math.min(dX, 100)}px)`; }
-    }
+    function swipeMove(e) { let dX = startX - e.touches[0].clientX; if (dX > 10) { isSwiping = true; e.currentTarget.style.transform = `translateX(-${Math.min(dX, 100)}px)`; } }
     function swipeEnd(e, item, type) {
-        let dX = startX - e.changedTouches[0].clientX;
-        e.currentTarget.style.transition = 'transform 0.3s ease';
-        if (dX > 70 && confirm(`ลบ "${item}" จากหน้านี้?`)) {
-            if(type==='receive') { delete receiveQty[item]; delete receiveWgt[item]; } else { delete returnQty[item]; delete returnWgt[item]; }
-            saveDailyDataToCloud(); if(type==='receive') renderReceive(); else renderReturn();
-        } else { e.currentTarget.style.transform = `translateX(0)`; }
+        let dX = startX - e.changedTouches[0].clientX; e.currentTarget.style.transition = 'transform 0.3s ease';
+        if (dX > 70 && confirm(`ลบ "${item}" จากหน้านี้?`)) { if(type==='receive') { delete receiveQty[item]; delete receiveWgt[item]; } else { delete returnQty[item]; delete returnWgt[item]; } saveDailyDataToCloud(); if(type==='receive') renderReceive(); else renderReturn(); } else { e.currentTarget.style.transform = `translateX(0)`; }
     }
 
-    function switchTab(id) { document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active')); document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active')); document.getElementById(`tab-${id}`).classList.add('active'); document.getElementById(`tab-btn-${id}`).classList.add('active'); document.getElementById('cart-bar').style.display = id === 'order' ? 'flex' : 'none'; }
+    function switchTab(id) { 
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active')); 
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active')); 
+        document.getElementById(`tab-${id}`).classList.add('active'); 
+        document.getElementById(`tab-btn-${id}`).classList.add('active'); 
+        document.getElementById('cart-bar').style.display = id === 'order' ? 'flex' : 'none';
+        window.scrollTo(0, 0); // 🌟 กลับไปบนสุดของหน้าเสมอ
+    }
+
     function updateLocksUI() { document.getElementById('order-lock').style.display = appState.orderLocked ? 'flex' : 'none'; document.getElementById('receive-lock').style.display = appState.receiveLocked ? 'flex' : 'none'; document.getElementById('return-lock').style.display = appState.returnLocked ? 'flex' : 'none'; }
     function unlockOrder() { appState.orderLocked = false; saveDailyDataToCloud(); }
     function unlockReceive() { appState.receiveLocked = false; saveDailyDataToCloud(); }
     function unlockReturn() { appState.returnLocked = false; saveDailyDataToCloud(); }
 
-    function showSuggestionsRec(v) { const l = document.getElementById('autocomplete-list-rec'); l.innerHTML = ''; if(!v) return; categoryOrder.forEach(c => { if(activeCategories[c]) activeCategories[c].filter(i => i.toLowerCase().includes(v.toLowerCase())).forEach(m => { const d = document.createElement('div'); d.innerText = m; d.onclick = () => { receiveQty[m] = 0; saveDailyDataToCloud(); l.innerHTML = ''; document.getElementById('receive-search').value = ''; }; l.appendChild(d); }); }); }
-    function showSuggestions(v) { const l = document.getElementById('autocomplete-list'); l.innerHTML = ''; if(!v) return; categoryOrder.forEach(c => { if(activeCategories[c]) activeCategories[c].filter(i => i.toLowerCase().includes(v.toLowerCase())).forEach(m => { const d = document.createElement('div'); d.innerText = m; d.onclick = () => { returnQty[m] = 0; saveDailyDataToCloud(); l.innerHTML = ''; document.getElementById('return-search').value = ''; }; l.appendChild(d); }); }); }
+    function showSuggestionsRec(v) { 
+        const l = document.getElementById('autocomplete-list-rec'); l.innerHTML = ''; if(!v) return; 
+        categoryOrder.forEach(c => { if(activeCategories[c]) activeCategories[c].filter(i => i.toLowerCase().includes(v.toLowerCase())).forEach(m => { 
+            const d = document.createElement('div'); d.innerText = m; d.onclick = () => { 
+                receiveQty[m] = 0; saveDailyDataToCloud(); renderReceive(); l.innerHTML = ''; document.getElementById('receive-search').value = '';
+                // 🌟 เลื่อนอัตโนมัติไปที่สินค้าใหม่
+                setTimeout(() => { const target = document.getElementById(`item-rec-${m.replace(/'/g, "\\'")}`); if(target) target.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 100);
+            }; l.appendChild(d); 
+        }); }); 
+    }
+    function showSuggestions(v) { 
+        const l = document.getElementById('autocomplete-list'); l.innerHTML = ''; if(!v) return; 
+        categoryOrder.forEach(c => { if(activeCategories[c]) activeCategories[c].filter(i => i.toLowerCase().includes(v.toLowerCase())).forEach(m => { 
+            const d = document.createElement('div'); d.innerText = m; d.onclick = () => { 
+                returnQty[m] = 0; saveDailyDataToCloud(); renderReturn(); l.innerHTML = ''; document.getElementById('return-search').value = '';
+                // 🌟 เลื่อนอัตโนมัติไปที่สินค้าใหม่
+                setTimeout(() => { const target = document.getElementById(`item-ret-${m.replace(/'/g, "\\'")}`); if(target) target.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 100);
+            }; l.appendChild(d); 
+        }); }); 
+    }
 
     function openCart() { const l = document.getElementById('cart-list'); l.innerHTML = ''; categoryOrder.forEach(c => { if(!activeCategories[c]) return; const its = activeCategories[c].filter(i => orderCart[i] > 0); if(its.length > 0) { l.innerHTML += `<div style="font-weight:bold; color:green; margin:10px 0 5px;">${c}</div>`; its.forEach(i => l.innerHTML += `<div style="display:flex; justify-content:space-between; padding:5px; border-bottom:1px dashed #eee;"><span>${i}</span> <b>${orderCart[i]}</b></div>`); } }); document.getElementById('cart-modal').style.display = 'flex'; }
     function closeCart() { document.getElementById('cart-modal').style.display = 'none'; }
