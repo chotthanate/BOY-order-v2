@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>BOY | Order System V5.7</title>
+    <title>BOY | Order System V5.8</title>
     <style>
         :root { --primary: #4CAF50; --primary-dark: #388E3C; --secondary: #FF9800; --bg: #F4F9F4; --card-bg: #FFFFFF; --text: #333333; --danger: #F44336; }
         * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
@@ -58,14 +58,14 @@
 <div id="cute-loader"><div class="cup-icon">🥤</div><div class="loader-text" id="loader-msg">กำลังปั่นข้อมูล...</div></div>
 
 <header>
-    🥤 BOY | Order V5.7
-    <div class="header-icon" onclick="openManageModal()">⚙️</div>
+    🥤 BOY | Order V5.8
+    <div class="header-icon" onclick="window.openManageModal()">⚙️</div>
 </header>
 
 <div class="tab-menu">
-    <button class="tab-btn active" id="tab-btn-order" onclick="switchTab('order')">📝 สั่งของ</button>
-    <button class="tab-btn" id="tab-btn-receive" onclick="switchTab('receive')">📥 รับสินค้า</button>
-    <button class="tab-btn" id="tab-btn-return" onclick="switchTab('return')">📊 ปิดยอด/คืน</button>
+    <button class="tab-btn active" id="tab-btn-order" onclick="window.switchTab('order')">📝 สั่งของ</button>
+    <button class="tab-btn" id="tab-btn-receive" onclick="window.switchTab('receive')">📥 รับสินค้า</button>
+    <button class="tab-btn" id="tab-btn-return" onclick="window.switchTab('return')">📊 ปิดยอด/คืน</button>
 </div>
 
 <div id="tab-order" class="tab-content active">
@@ -74,11 +74,11 @@
 
 <div id="tab-receive" class="tab-content">
     <div class="search-box">
-        <input type="text" id="receive-search" class="form-control" style="margin-bottom:0;" placeholder="พิมพ์ค้นหาสินค้า..." oninput="showSuggestionsRec(this.value)">
+        <input type="text" id="receive-search" class="form-control" style="margin-bottom:0;" placeholder="พิมพ์ค้นหาสินค้า..." oninput="window.showSuggestionsRec(this.value)">
         <div id="autocomplete-list-rec" class="autocomplete-items"></div>
     </div>
     <div id="receive-container"></div>
-    <button class="btn-main" style="background:var(--primary); margin-top:20px;" onclick="confirmReceive()">✅ ยืนยันรับสินค้าเข้าชีท</button>
+    <button class="btn-main" style="background:var(--primary); margin-top:20px;" onclick="window.confirmReceive()">✅ ยืนยันรับสินค้าเข้าชีท</button>
 </div>
 
 <div id="tab-return" class="tab-content">
@@ -87,29 +87,29 @@
         <div style="display:flex; gap:10px;">
             <div style="flex:1;">
                 <label style="font-size:12px; font-weight:bold;">💵 เงินสด</label>
-                <input type="number" id="revenue-cash" class="rev-input" placeholder="0" onchange="saveRevenueToCloud()">
+                <input type="number" id="revenue-cash" class="rev-input" placeholder="0" onchange="window.saveRevenueToCloud()">
             </div>
             <div style="flex:1;">
                 <label style="font-size:12px; font-weight:bold;">📱 เงินโอน</label>
-                <input type="number" id="revenue-transfer" class="rev-input" placeholder="0" onchange="saveRevenueToCloud()">
+                <input type="number" id="revenue-transfer" class="rev-input" placeholder="0" onchange="window.saveRevenueToCloud()">
             </div>
         </div>
     </div>
 
     <div class="category-title" style="margin-top:10px;">📦 คืนสินค้าเข้าสต๊อก</div>
     <div class="search-box">
-        <input type="text" id="return-search" class="form-control" style="margin-bottom:0;" placeholder="พิมพ์ค้นหาสินค้าคืน..." oninput="showSuggestions(this.value)">
+        <input type="text" id="return-search" class="form-control" style="margin-bottom:0;" placeholder="พิมพ์ค้นหาสินค้าคืน..." oninput="window.showSuggestions(this.value)">
         <div id="autocomplete-list" class="autocomplete-items"></div>
     </div>
     <div id="return-container"></div>
-    <button class="btn-main" style="background:var(--danger); margin-top:20px;" onclick="confirmReturn()">🔴 บันทึกปิดยอดเข้าชีท</button>
+    <button class="btn-main" style="background:var(--danger); margin-top:20px;" onclick="window.confirmReturn()">🔴 บันทึกปิดยอดเข้าชีท</button>
 </div>
 
 <div class="modal" id="manage-modal">
     <div class="modal-content">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
             <h2 style="margin:0; color:var(--primary-dark);">⚙️ จัดการฐานข้อมูล</h2>
-            <button onclick="closeManageModal()" style="border:none; background:none; font-size:24px;">×</button>
+            <button onclick="window.closeManageModal()" style="border:none; background:none; font-size:24px;">×</button>
         </div>
         <div id="manage-scroll-area" class="scroll-area">
             <div style="background:#f9f9f9; padding:15px; border-radius:12px; border:1px solid #eee; margin-bottom:20px;">
@@ -124,11 +124,11 @@
                     <input type="checkbox" id="item-is-weight" style="width:20px; height:20px;"> ชั่งกิโลกรัม
                 </label>
                 <div style="display:flex; gap:10px;">
-                    <button class="btn-main" style="background:var(--primary); margin:0;" onclick="saveItemData()">💾 บันทึก</button>
-                    <button class="btn-main" id="btn-cancel-edit" style="background:#ccc; margin:0; display:none;" onclick="cancelEditMode()">ยกเลิก</button>
+                    <button class="btn-main" style="background:var(--primary); margin:0;" onclick="window.saveItemData()">💾 บันทึก</button>
+                    <button class="btn-main" id="btn-cancel-edit" style="background:#ccc; margin:0; display:none;" onclick="window.cancelEditMode()">ยกเลิก</button>
                 </div>
             </div>
-            <input type="text" id="manage-search" class="form-control" placeholder="🔍 ค้นหา..." oninput="renderManageList()">
+            <input type="text" id="manage-search" class="form-control" placeholder="🔍 ค้นหา..." oninput="window.renderManageList()">
             <div id="manage-category-nav" class="sticky-cat-nav"></div>
             <div style="overflow-x:auto;">
                 <table class="excel-table">
@@ -142,17 +142,17 @@
 
 <div class="modal" id="cart-modal">
     <div class="modal-content">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;"><h2 style="margin:0;">🛒 สรุปรายการ</h2><button onclick="closeCart()" style="border:none; background:none; font-size:24px;">×</button></div>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;"><h2 style="margin:0;">🛒 สรุปรายการ</h2><button onclick="window.closeCart()" style="border:none; background:none; font-size:24px;">×</button></div>
         <div id="cart-list" class="scroll-area"></div>
-        <button class="btn-main" style="background:var(--secondary);" onclick="saveAndSend()">🚀 ส่ง LINE</button>
-        <button class="btn-main" style="background:#2196F3;" onclick="copyOrderText()">📋 คัดลอกข้อความ (ส่งเอง)</button>
-        <button class="btn-main" style="background:#FFEBEE; color:var(--danger);" onclick="clearOrderCart()">🗑️ ล้างตะกร้า</button>
+        <button class="btn-main" style="background:var(--secondary);" onclick="window.saveAndSend()">🚀 ส่ง LINE</button>
+        <button class="btn-main" style="background:#2196F3;" onclick="window.copyOrderText()">📋 คัดลอกข้อความ (ส่งเอง)</button>
+        <button class="btn-main" style="background:#FFEBEE; color:var(--danger);" onclick="window.clearOrderCart()">🗑️ ล้างตะกร้า</button>
     </div>
 </div>
 
 <div class="cart-bar" id="cart-bar">
     <div style="font-size: 18px; font-weight: bold;">รวม: <span id="total-qty" style="color:var(--primary);">0</span></div>
-    <button style="background:var(--primary); color:white; border:none; padding:12px 25px; border-radius:25px; font-weight:bold;" onclick="openCart()">ดูสรุป / บันทึก</button>
+    <button style="background:var(--primary); color:white; border:none; padding:12px 25px; border-radius:25px; font-weight:bold;" onclick="window.openCart()">ดูสรุป / บันทึก</button>
 </div>
 
 <script>
@@ -173,38 +173,50 @@
             activeCategories = docSnap.data().categories || {};
             weightItems = docSnap.data().weightItems || [];
             window.itemMappings = docSnap.data().itemMappings || {};
-            renderOrder(); renderReceive(); renderReturn();
-            if(document.getElementById('manage-modal').style.display === 'flex') renderManageList();
+            localStorage.setItem('boy_v4_database', JSON.stringify(activeCategories));
+            localStorage.setItem('boy_v4_weights', JSON.stringify(weightItems));
+            localStorage.setItem('boy_v4_mappings', JSON.stringify(window.itemMappings));
+            
+            if(window.renderOrder) window.renderOrder(); 
+            if(window.renderReceive) window.renderReceive(); 
+            if(window.renderReturn) window.renderReturn();
+            if(document.getElementById('manage-modal').style.display === 'flex' && window.renderManageList) window.renderManageList();
         }
     });
 
     onSnapshot(doc(db, "daily_orders", dateKey), (docSnap) => {
         if (docSnap.exists()) {
             const data = docSnap.data();
-            if(data.cart) { orderCart = data.cart; updateOrderTotal(); renderOrder(); }
-            if(data.receiveQty) { receiveQty = data.receiveQty; receiveWgt = data.receiveWgt || {}; renderReceive(); }
+            if(data.cart) { orderCart = data.cart; if(window.updateOrderTotal) window.updateOrderTotal(); if(window.renderOrder) window.renderOrder(); }
+            if(data.receiveQty) { receiveQty = data.receiveQty; receiveWgt = data.receiveWgt || {}; if(window.renderReceive) window.renderReceive(); }
             if(data.revenue) {
                 revenue = data.revenue;
-                document.getElementById('revenue-cash').value = revenue.cash || "";
-                document.getElementById('revenue-transfer').value = revenue.transfer || "";
+                let cEl = document.getElementById('revenue-cash');
+                let tEl = document.getElementById('revenue-transfer');
+                if(cEl) cEl.value = revenue.cash || "";
+                if(tEl) tEl.value = revenue.transfer || "";
             }
             
-            // บังคับ 4 รายการโชว์เสมอ
             returnQty = data.returnQty || {};
             returnWgt = data.returnWgt || {};
             const stickyItems = ["ส้ม (โหล)", "อโวคาโด (กล่อง)", "แตงโม (กล่อง)", "สับปะรด (สกัด+ปั่น) (กล่อง)"];
             stickyItems.forEach(i => { if(returnQty[i] === undefined) returnQty[i] = 0; });
-            renderReturn();
+            if(window.renderReturn) window.renderReturn();
         } else {
             returnQty = { "ส้ม (โหล)":0, "อโวคาโด (กล่อง)":0, "แตงโม (กล่อง)":0, "สับปะรด (สกัด+ปั่น) (กล่อง)":0 };
-            saveDailyDataToCloud();
+            if(window.saveDailyDataToCloud) window.saveDailyDataToCloud();
         }
     });
 </script>
 
 <script>
     const categoryOrder = ["🍉 ผลไม้ (ใส่กล่อง)", "🍍 ผลไม้ (โชว์)", "🥛 อื่นๆ", "🥫 ผลไม้อบแห้งกระปุก", "🍬 ขนม", "❄️ ผลไม้แช่แข็ง", "📦 บรรจุภัณฑ์", "🍪 ท็อปปิ้ง", "☕ ผง"];
-    let activeCategories = {}; let weightItems = []; window.itemMappings = {};
+    
+    // 🌟 ดึงข้อมูลจาก LocalStorage ทันทีไม่ต้องรอโหลด
+    let activeCategories = JSON.parse(localStorage.getItem('boy_v4_database')) || {};
+    let weightItems = JSON.parse(localStorage.getItem('boy_v4_weights')) || [];
+    window.itemMappings = JSON.parse(localStorage.getItem('boy_v4_mappings')) || {};
+    
     let orderCart = {}; let receiveQty = {}; let receiveWgt = {}; let returnQty = {}; let returnWgt = {};
     let revenue = { cash: "", transfer: "" };
 
@@ -226,23 +238,26 @@
                     </div>
                 </div>`;
             }); container.appendChild(grid);
-        }); updateOrderTotal();
+        }); window.updateOrderTotal();
     }
 
     window.updateOrderQty = function(item, change) { 
         orderCart[item] = Math.max(0, (orderCart[item] || 0) + change); 
-        saveDailyDataToCloud(); renderOrder();
+        window.saveDailyDataToCloud(); window.renderOrder();
     }
 
     window.manualQty = function(item, val, type) { 
         let n = parseInt(val) || 0; 
-        if(type==='order') { orderCart[item]=n; renderOrder(); }
-        else if(type==='receive') { receiveQty[item]=n; renderReceive(); }
-        else { returnQty[item]=n; renderReturn(); }
-        saveDailyDataToCloud(); 
+        if(type==='order') { orderCart[item]=n; window.renderOrder(); }
+        else if(type==='receive') { receiveQty[item]=n; window.renderReceive(); }
+        else { returnQty[item]=n; window.renderReturn(); }
+        window.saveDailyDataToCloud(); 
     }
 
-    function updateOrderTotal() { document.getElementById('total-qty').innerText = Object.values(orderCart).reduce((a, b) => a + b, 0); }
+    window.updateOrderTotal = function() { 
+        let t = document.getElementById('total-qty');
+        if(t) t.innerText = Object.values(orderCart).reduce((a, b) => a + b, 0); 
+    }
 
     window.renderManageList = function() {
         const search = document.getElementById('manage-search').value.toLowerCase();
@@ -280,7 +295,7 @@
         let target = idx + dir; 
         if (target >= 0 && target < items.length) { 
             [items[idx], items[target]] = [items[target], items[idx]]; 
-            saveDB(); 
+            window.saveDB(); 
         } 
     }
 
@@ -297,7 +312,7 @@
                 container.innerHTML += `<div class="category-title">${cat}</div>`;
                 items.forEach(item => {
                     const q = receiveQty[item] || 0; const w = receiveWgt[item] || ""; const safeItem = item.replace(/'/g, "\\'");
-                    container.innerHTML += `<div id="item-rec-${safeItem}" class="swipe-container"><div class="swipe-background">🗑️</div><div class="swipe-card" ontouchstart="swipeStart(event)" ontouchmove="swipeMove(event)" ontouchend="swipeEnd(event,'${safeItem}','receive')"><div style="display:flex; justify-content:space-between; align-items:center; padding:12px;"><span class="item-id-name" style="font-weight:bold;">${item}</span>${weightItems.includes(item) ? `<input type="number" class="weight-input" style="width:120px" placeholder="กิโลกรัม" value="${w}" oninput="localWgt('${safeItem}',this.value,'receive')" onchange="saveDailyDataToCloud()" onclick="this.select()">` : `<div class="controls"><button class="btn-minus" onclick="updateRecQty('${safeItem}',-1)">-</button><input type="number" class="qty-input" value="${q}" onchange="manualQty('${safeItem}',this.value,'receive')" onclick="this.select()"><button class="btn-plus" onclick="updateRecQty('${safeItem}', 1)">+</button></div>`}</div></div></div>`;
+                    container.innerHTML += `<div id="item-rec-${safeItem}" class="swipe-container"><div class="swipe-background">🗑️</div><div class="swipe-card" ontouchstart="window.swipeStart(event)" ontouchmove="window.swipeMove(event)" ontouchend="window.swipeEnd(event,'${safeItem}','receive')"><div style="display:flex; justify-content:space-between; align-items:center; padding:12px;"><span class="item-id-name" style="font-weight:bold;">${item}</span>${weightItems.includes(item) ? `<input type="number" class="weight-input" style="width:120px" placeholder="กิโลกรัม" value="${w}" oninput="window.localWgt('${safeItem}',this.value,'receive')" onchange="window.saveDailyDataToCloud()" onclick="this.select()">` : `<div class="controls"><button class="btn-minus" onclick="window.updateRecQty('${safeItem}',-1)">-</button><input type="number" class="qty-input" value="${q}" onchange="window.manualQty('${safeItem}',this.value,'receive')" onclick="this.select()"><button class="btn-plus" onclick="window.updateRecQty('${safeItem}', 1)">+</button></div>`}</div></div></div>`;
                 });
             }
         });
@@ -312,13 +327,13 @@
                 container.innerHTML += `<div class="category-title">${cat}</div>`;
                 items.forEach(item => {
                     const q = returnQty[item] || 0; const w = returnWgt[item] || ""; const safeItem = item.replace(/'/g, "\\'");
-                    container.innerHTML += `<div id="item-ret-${safeItem}" class="swipe-container"><div class="swipe-background">🗑️</div><div class="swipe-card" ontouchstart="swipeStart(event)" ontouchmove="swipeMove(event)" ontouchend="swipeEnd(event,'${safeItem}','return')"><div style="display:flex; justify-content:space-between; align-items:center; padding:12px;"><span class="item-id-name" style="font-weight:bold;">${item}</span>${weightItems.includes(item) ? `<input type="number" class="weight-input" style="width:120px" placeholder="กิโลกรัม" value="${w}" oninput="localWgt('${safeItem}',this.value,'return')" onchange="saveDailyDataToCloud()" onclick="this.select()">` : `<div class="controls"><button class="btn-minus" onclick="updateRetQty('${safeItem}',-1)">-</button><input type="number" class="qty-input" value="${q}" onchange="manualQty('${safeItem}',this.value,'return')" onclick="this.select()"><button class="btn-plus" onclick="updateRetQty('${safeItem}', 1)">+</button></div>`}</div></div></div>`;
+                    container.innerHTML += `<div id="item-ret-${safeItem}" class="swipe-container"><div class="swipe-background">🗑️</div><div class="swipe-card" ontouchstart="window.swipeStart(event)" ontouchmove="window.swipeMove(event)" ontouchend="window.swipeEnd(event,'${safeItem}','return')"><div style="display:flex; justify-content:space-between; align-items:center; padding:12px;"><span class="item-id-name" style="font-weight:bold;">${item}</span>${weightItems.includes(item) ? `<input type="number" class="weight-input" style="width:120px" placeholder="กิโลกรัม" value="${w}" oninput="window.localWgt('${safeItem}',this.value,'return')" onchange="window.saveDailyDataToCloud()" onclick="this.select()">` : `<div class="controls"><button class="btn-minus" onclick="window.updateRetQty('${safeItem}',-1)">-</button><input type="number" class="qty-input" value="${q}" onchange="window.manualQty('${safeItem}',this.value,'return')" onclick="this.select()"><button class="btn-plus" onclick="window.updateRetQty('${safeItem}', 1)">+</button></div>`}</div></div></div>`;
                 });
             }
         });
     }
 
-    function saveDailyDataToCloud() {
+    window.saveDailyDataToCloud = function() {
         if (window.db) {
             const dateStr = new Date().toLocaleDateString('en-CA');
             window.setDoc(window.doc(window.db, "daily_orders", dateStr), { 
@@ -331,11 +346,11 @@
     window.saveRevenueToCloud = function() {
         revenue.cash = document.getElementById('revenue-cash').value;
         revenue.transfer = document.getElementById('revenue-transfer').value;
-        saveDailyDataToCloud();
+        window.saveDailyDataToCloud();
     }
 
-    window.updateRecQty = function(item, change) { receiveQty[item] = Math.max(0, (receiveQty[item] || 0) + change); renderReceive(); saveDailyDataToCloud(); }
-    window.updateRetQty = function(item, change) { returnQty[item] = Math.max(0, (returnQty[item] || 0) + change); renderReturn(); saveDailyDataToCloud(); }
+    window.updateRecQty = function(item, change) { receiveQty[item] = Math.max(0, (receiveQty[item] || 0) + change); window.renderReceive(); window.saveDailyDataToCloud(); }
+    window.updateRetQty = function(item, change) { returnQty[item] = Math.max(0, (returnQty[item] || 0) + change); window.renderReturn(); window.saveDailyDataToCloud(); }
     window.localWgt = function(item, val, type) { if(type==='receive') receiveWgt[item]=val; else returnWgt[item]=val; }
 
     window.switchTab = function(id) { 
@@ -361,17 +376,17 @@
         alert("📋 คัดลอกแล้ว นำไปวางใน LINE ได้เลยครับ");
     };
 
-    async function saveAndSend() {
-        showLoader("กำลังส่ง...");
+    window.saveAndSend = async function() {
+        window.showLoader("กำลังส่ง...");
         try {
             receiveQty = {}; Object.keys(orderCart).forEach(k => { if(orderCart[k] > 0) receiveQty[k] = orderCart[k]; });
-            saveDailyDataToCloud();
+            window.saveDailyDataToCloud();
             await fetch(WEBHOOK_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: 'order', qtyData: orderCart, categories: activeCategories }) });
-            alert("✅ ส่งสำเร็จ!"); switchTab('receive'); closeCart();
-        } catch(e) { alert("Error: " + e.message); } finally { hideLoader(); }
+            alert("✅ ส่งสำเร็จ!"); window.switchTab('receive'); window.closeCart();
+        } catch(e) { alert("Error: " + e.message); } finally { window.hideLoader(); }
     }
 
-    async function confirmReceive() {
+    window.confirmReceive = async function() {
         let finalData = {}; let hasData = false;
         document.querySelectorAll('#receive-container .swipe-card').forEach(card => {
             let itemName = card.querySelector('.item-id-name').innerText.trim();
@@ -379,49 +394,84 @@
             if (v > 0) { finalData[window.itemMappings[itemName] || itemName] = v; hasData = true; }
         });
         if(!hasData) return alert("กรุณาใส่จำนวน");
-        showLoader("กำลังบันทึก...");
+        window.showLoader("กำลังบันทึก...");
         try {
             await fetch(WEBHOOK_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: 'receive', qtyData: finalData }) });
-            alert("✅ บันทึกสำเร็จ!"); switchTab('return');
-        } catch(e) { alert("Error: " + e.message); } finally { hideLoader(); }
+            alert("✅ บันทึกสำเร็จ!"); window.switchTab('return');
+        } catch(e) { alert("Error: " + e.message); } finally { window.hideLoader(); }
     }
 
-    async function confirmReturn() {
+    window.confirmReturn = async function() {
         let finalData = {}; let cashVal = document.getElementById('revenue-cash').value; let transferVal = document.getElementById('revenue-transfer').value;
         document.querySelectorAll('#return-container .swipe-card').forEach(card => {
             let itemName = card.querySelector('.item-id-name').innerText.trim();
             let v = weightItems.includes(itemName) ? (parseFloat(card.querySelector('.weight-input')?.value) || 0) : (parseInt(card.querySelector('.qty-input')?.value) || 0);
             if (v > 0) finalData[window.itemMappings[itemName] || itemName] = v;
         });
-        showLoader("กำลังบันทึก...");
+        window.showLoader("กำลังบันทึก...");
         try {
             await fetch(WEBHOOK_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: 'return', qtyData: finalData, cash: cashVal, transfer: transferVal }) });
             alert("✅ ปิดยอดสำเร็จ!"); 
-        } catch(e) { alert("Error: " + e.message); } finally { hideLoader(); }
+        } catch(e) { alert("Error: " + e.message); } finally { window.hideLoader(); }
     }
 
-    window.showLoader = showLoader; window.hideLoader = hideLoader;
+    window.showLoader = function(text) { document.getElementById('loader-msg').innerText = text; document.getElementById('cute-loader').style.display = 'flex'; }
+    window.hideLoader = function() { document.getElementById('cute-loader').style.display = 'none'; }
     window.openCart = function() { const l = document.getElementById('cart-list'); l.innerHTML = ''; categoryOrder.forEach(c => { if(!activeCategories[c]) return; const its = activeCategories[c].filter(i => orderCart[i] > 0); if(its.length > 0) { l.innerHTML += `<div style="font-weight:bold; color:green; margin:10px 0 5px;">${c}</div>`; its.forEach(i => l.innerHTML += `<div style="display:flex; justify-content:space-between; padding:5px; border-bottom:1px dashed #eee;"><span>${i}</span> <b>${orderCart[i]}</b></div>`); } }); document.getElementById('cart-modal').style.display = 'flex'; }
     window.closeCart = function() { document.getElementById('cart-modal').style.display = 'none'; }
-    window.clearOrderCart = function() { if(confirm("ล้างตะกร้า?")) { orderCart = {}; saveDailyDataToCloud(); closeCart(); renderOrder(); } }
-    window.openManageModal = function() { document.getElementById('manage-modal').style.display = 'flex'; renderManageList(); }
+    window.clearOrderCart = function() { if(confirm("ล้างตะกร้า?")) { orderCart = {}; window.saveDailyDataToCloud(); window.closeCart(); window.renderOrder(); } }
+    window.openManageModal = function() { document.getElementById('manage-modal').style.display = 'flex'; window.renderManageList(); }
     window.closeManageModal = function() { document.getElementById('manage-modal').style.display = 'none'; }
-    window.cancelEditMode = function() { editingItem = null; document.getElementById('manage-form-title').innerText = "➕ เพิ่มสินค้าใหม่"; document.getElementById('item-name').value = ''; document.getElementById('item-unit').value = ''; document.getElementById('item-sheet-name').value = ''; document.getElementById('item-is-weight').checked = false; document.getElementById('btn-cancel-edit').style.display = 'none'; }
+    
+    // ตั้งค่า Item ใหม่
+    window.editItemBtn = function(cat, oldFullName) {
+        window.editingItem = { cat: cat, oldName: oldFullName }; document.getElementById('manage-form-title').innerText = "✏️ แก้ไขสินค้า"; document.getElementById('item-cat').value = cat;
+        let name = oldFullName; let unit = ""; let match = oldFullName.match(/(.*?)\s*\((.*?)\)$/); if (match) { name = match[1].trim(); unit = match[2].trim(); }
+        document.getElementById('item-name').value = name; document.getElementById('item-unit').value = unit; 
+        document.getElementById('item-sheet-name').value = window.itemMappings[oldFullName] || ""; 
+        document.getElementById('item-is-weight').checked = weightItems.includes(oldFullName);
+        document.getElementById('btn-cancel-edit').style.display = 'block'; document.getElementById('manage-scroll-area').scrollTop = 0;
+    }
+    
+    window.deleteItemBtn = function(cat, item) { if(confirm(`ลบ "${item}"?`)) { activeCategories[cat] = activeCategories[cat].filter(i => i !== item); delete window.itemMappings[item]; window.saveDB(); } }
+    
+    window.saveItemData = function() {
+        const cat = document.getElementById('item-cat').value; const name = document.getElementById('item-name').value.trim(); const unit = document.getElementById('item-unit').value.trim(); 
+        const sheetName = document.getElementById('item-sheet-name').value.trim(); const isWeight = document.getElementById('item-is-weight').checked;
+        if(!name) return;
+        const fullName = unit ? `${name} (${unit})` : name;
+        if (window.editingItem) { 
+            if (window.editingItem.cat === cat) {
+                let idx = activeCategories[cat].indexOf(window.editingItem.oldName);
+                if (idx !== -1) activeCategories[cat][idx] = fullName;
+            } else {
+                activeCategories[window.editingItem.cat] = activeCategories[window.editingItem.cat].filter(i => i !== window.editingItem.oldName);
+                if(!activeCategories[cat]) activeCategories[cat] = []; activeCategories[cat].push(fullName);
+            }
+            weightItems = weightItems.filter(i => i !== window.editingItem.oldName);
+            if (window.editingItem.oldName !== fullName) delete window.itemMappings[window.editingItem.oldName];
+        } else {
+            if(!activeCategories[cat]) activeCategories[cat] = []; activeCategories[cat].push(fullName);
+        }
+        if (isWeight) weightItems.push(fullName);
+        if (sheetName) window.itemMappings[fullName] = sheetName; else delete window.itemMappings[fullName];
+        window.saveDB(); window.cancelEditMode();
+    }
+    window.cancelEditMode = function() { window.editingItem = null; document.getElementById('manage-form-title').innerText = "➕ เพิ่มสินค้าใหม่"; document.getElementById('item-name').value = ''; document.getElementById('item-unit').value = ''; document.getElementById('item-sheet-name').value = ''; document.getElementById('item-is-weight').checked = false; document.getElementById('btn-cancel-edit').style.display = 'none'; }
 
-    let startX = 0; function swipeStart(e) { startX = e.touches[0].clientX; e.currentTarget.style.transition = 'none'; }
-    function swipeMove(e) { let dX = startX - e.touches[0].clientX; if (dX > 10) e.currentTarget.style.transform = `translateX(-${Math.min(dX, 100)}px)`; }
-    function swipeEnd(e, item, type) {
+    let startX = 0; window.swipeStart = function(e) { startX = e.touches[0].clientX; e.currentTarget.style.transition = 'none'; }
+    window.swipeMove = function(e) { let dX = startX - e.touches[0].clientX; if (dX > 10) e.currentTarget.style.transform = `translateX(-${Math.min(dX, 100)}px)`; }
+    window.swipeEnd = function(e, item, type) {
         let dX = startX - e.changedTouches[0].clientX; e.currentTarget.style.transition = 'transform 0.3s ease';
-        if (dX > 70) { if(type==='receive') { delete receiveQty[item]; renderReceive(); } else { delete returnQty[item]; renderReturn(); } saveDailyDataToCloud(); } 
+        if (dX > 70) { if(type==='receive') { delete receiveQty[item]; window.renderReceive(); } else { delete returnQty[item]; window.renderReturn(); } window.saveDailyDataToCloud(); } 
         else { e.currentTarget.style.transform = `translateX(0)`; }
     }
-    window.swipeStart = swipeStart; window.swipeMove = swipeMove; window.swipeEnd = swipeEnd;
 
     window.showSuggestionsRec = function(v) { 
         const l = document.getElementById('autocomplete-list-rec'); l.innerHTML = ''; if(!v) return; 
         categoryOrder.forEach(c => { if(activeCategories[c]) activeCategories[c].filter(i => i.toLowerCase().includes(v.toLowerCase())).forEach(m => { 
             const d = document.createElement('div'); d.innerText = m; d.onclick = () => { 
-                receiveQty[m] = 0; saveDailyDataToCloud(); renderReceive(); l.innerHTML = ''; document.getElementById('receive-search').value = '';
+                receiveQty[m] = 0; window.saveDailyDataToCloud(); window.renderReceive(); l.innerHTML = ''; document.getElementById('receive-search').value = '';
                 setTimeout(() => { const target = document.getElementById(`item-rec-${m.replace(/'/g, "\\'")}`); if(target) target.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 150);
             }; l.appendChild(d); 
         }); }); 
@@ -430,11 +480,21 @@
         const l = document.getElementById('autocomplete-list'); l.innerHTML = ''; if(!v) return; 
         categoryOrder.forEach(c => { if(activeCategories[c]) activeCategories[c].filter(i => i.toLowerCase().includes(v.toLowerCase())).forEach(m => { 
             const d = document.createElement('div'); d.innerText = m; d.onclick = () => { 
-                returnQty[m] = 0; saveDailyDataToCloud(); renderReturn(); l.innerHTML = ''; document.getElementById('return-search').value = '';
+                returnQty[m] = 0; window.saveDailyDataToCloud(); window.renderReturn(); l.innerHTML = ''; document.getElementById('return-search').value = '';
                 setTimeout(() => { const target = document.getElementById(`item-ret-${m.replace(/'/g, "\\'")}`); if(target) target.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 150);
             }; l.appendChild(d); 
         }); }); 
     }
+    
+    // 🌟 สร้างฟังก์ชันเริ่มต้นทำงาน
+    window.init = function() { 
+        const sel = document.getElementById('item-cat'); 
+        categoryOrder.forEach(cat => { sel.innerHTML += `<option value="${cat}">${cat}</option>`; });
+        window.renderOrder(); 
+        window.renderReceive(); 
+        window.renderReturn(); 
+    }
+    window.init();
 </script>
 </body>
 </html>
