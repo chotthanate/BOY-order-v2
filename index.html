@@ -591,9 +591,18 @@
     }
     
     window.moveItem = function(cat, idx, dir) { 
-        let items = activeCategories[cat]; let target = idx + dir; 
+        let items = activeCategories[cat]; 
+        let target = idx + dir; 
         if (target >= 0 && target < items.length) { 
-            [items[idx], items[target]] = [items[target], items[idx]]; 
+            // สลับตำแหน่งแบบชัวร์ 100% (รองรับทุกเบราว์เซอร์)
+            let temp = items[idx];
+            items[idx] = items[target];
+            items[target] = temp;
+            
+            // บังคับวาดหน้าจอใหม่ทันที (ปุ่มจะขยับตามนิ้วเลย)
+            window.renderManageList(); 
+            
+            // เซฟลงฐานข้อมูล
             window.saveDB(); 
         } 
     }
