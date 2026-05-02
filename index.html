@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>BOY | Order System V5.6</title>
+    <title>BOY | Order System V5.7</title>
     <style>
         :root { --primary: #4CAF50; --primary-dark: #388E3C; --secondary: #FF9800; --bg: #F4F9F4; --card-bg: #FFFFFF; --text: #333333; --danger: #F44336; }
         * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
@@ -49,7 +49,6 @@
         @keyframes bounceLoader { 0%, 100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-20px) scale(1.1); } }
         .cup-icon { font-size: 60px; animation: bounceLoader 0.8s infinite alternate ease-in-out; text-shadow: 0 4px 10px rgba(0,0,0,0.3); }
         .loader-text { margin-top: 15px; font-weight: bold; font-size: 18px; background: var(--primary); padding: 8px 20px; border-radius: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
-        
         .revenue-box { background: #E8F5E9; border: 1px solid #C8E6C9; padding: 15px; border-radius: 12px; margin-bottom: 20px; }
         .rev-input { width: 100%; padding: 12px; border: 2px solid #A5D6A7; border-radius: 8px; font-size: 20px; font-weight: bold; text-align: right; outline: none; }
     </style>
@@ -59,7 +58,7 @@
 <div id="cute-loader"><div class="cup-icon">🥤</div><div class="loader-text" id="loader-msg">กำลังปั่นข้อมูล...</div></div>
 
 <header>
-    🥤 BOY | Order V5.6
+    🥤 BOY | Order V5.7
     <div class="header-icon" onclick="openManageModal()">⚙️</div>
 </header>
 
@@ -189,14 +188,14 @@
                 document.getElementById('revenue-cash').value = revenue.cash || "";
                 document.getElementById('revenue-transfer').value = revenue.transfer || "";
             }
-            // 🌟 V5.6: บังคับ 4 รายการคืนโชว์เสมอ
+            
+            // บังคับ 4 รายการโชว์เสมอ
             returnQty = data.returnQty || {};
             returnWgt = data.returnWgt || {};
             const stickyItems = ["ส้ม (โหล)", "อโวคาโด (กล่อง)", "แตงโม (กล่อง)", "สับปะรด (สกัด+ปั่น) (กล่อง)"];
             stickyItems.forEach(i => { if(returnQty[i] === undefined) returnQty[i] = 0; });
             renderReturn();
         } else {
-            // วันใหม่
             returnQty = { "ส้ม (โหล)":0, "อโวคาโด (กล่อง)":0, "แตงโม (กล่อง)":0, "สับปะรด (สกัด+ปั่น) (กล่อง)":0 };
             saveDailyDataToCloud();
         }
@@ -209,7 +208,6 @@
     let orderCart = {}; let receiveQty = {}; let receiveWgt = {}; let returnQty = {}; let returnWgt = {};
     let revenue = { cash: "", transfer: "" };
 
-    // --- สั่งของ ---
     window.renderOrder = function() {
         const container = document.getElementById('order-container'); container.innerHTML = '';
         categoryOrder.forEach(cat => {
@@ -246,7 +244,6 @@
 
     function updateOrderTotal() { document.getElementById('total-qty').innerText = Object.values(orderCart).reduce((a, b) => a + b, 0); }
 
-    // --- จัดการฐานข้อมูล ---
     window.renderManageList = function() {
         const search = document.getElementById('manage-search').value.toLowerCase();
         const tbody = document.getElementById('manage-table-body'); tbody.innerHTML = '';
@@ -283,7 +280,7 @@
         let target = idx + dir; 
         if (target >= 0 && target < items.length) { 
             [items[idx], items[target]] = [items[target], items[idx]]; 
-            saveDB(); // บันทึกลง Firestore แล้ว Snapshot จะสั่ง Render ใหม่เอง
+            saveDB(); 
         } 
     }
 
@@ -291,7 +288,6 @@
         if (window.db) { window.setDoc(window.doc(window.db, "system_settings", "master_database"), { categories: activeCategories, weightItems: weightItems, itemMappings: window.itemMappings }, { merge: true }); }
     }
 
-    // --- รับสินค้า / คืนสินค้า ---
     window.renderReceive = function() {
         const container = document.getElementById('receive-container'); container.innerHTML = '';
         categoryOrder.forEach(cat => {
@@ -322,7 +318,6 @@
         });
     }
 
-    // --- ฟังก์ชันเสริม ---
     function saveDailyDataToCloud() {
         if (window.db) {
             const dateStr = new Date().toLocaleDateString('en-CA');
@@ -405,7 +400,6 @@
         } catch(e) { alert("Error: " + e.message); } finally { hideLoader(); }
     }
 
-    // --- อื่นๆ ---
     window.showLoader = showLoader; window.hideLoader = hideLoader;
     window.openCart = function() { const l = document.getElementById('cart-list'); l.innerHTML = ''; categoryOrder.forEach(c => { if(!activeCategories[c]) return; const its = activeCategories[c].filter(i => orderCart[i] > 0); if(its.length > 0) { l.innerHTML += `<div style="font-weight:bold; color:green; margin:10px 0 5px;">${c}</div>`; its.forEach(i => l.innerHTML += `<div style="display:flex; justify-content:space-between; padding:5px; border-bottom:1px dashed #eee;"><span>${i}</span> <b>${orderCart[i]}</b></div>`); } }); document.getElementById('cart-modal').style.display = 'flex'; }
     window.closeCart = function() { document.getElementById('cart-modal').style.display = 'none'; }
@@ -414,7 +408,6 @@
     window.closeManageModal = function() { document.getElementById('manage-modal').style.display = 'none'; }
     window.cancelEditMode = function() { editingItem = null; document.getElementById('manage-form-title').innerText = "➕ เพิ่มสินค้าใหม่"; document.getElementById('item-name').value = ''; document.getElementById('item-unit').value = ''; document.getElementById('item-sheet-name').value = ''; document.getElementById('item-is-weight').checked = false; document.getElementById('btn-cancel-edit').style.display = 'none'; }
 
-    // Swipe delete logic (simplified)
     let startX = 0; function swipeStart(e) { startX = e.touches[0].clientX; e.currentTarget.style.transition = 'none'; }
     function swipeMove(e) { let dX = startX - e.touches[0].clientX; if (dX > 10) e.currentTarget.style.transform = `translateX(-${Math.min(dX, 100)}px)`; }
     function swipeEnd(e, item, type) {
@@ -423,10 +416,7 @@
         else { e.currentTarget.style.transform = `translateX(0)`; }
     }
     window.swipeStart = swipeStart; window.swipeMove = swipeMove; window.swipeEnd = swipeEnd;
-</script>
 
-<script>
-    // ส่วนของการจัดการ Suggestion ในช่องค้นหา
     window.showSuggestionsRec = function(v) { 
         const l = document.getElementById('autocomplete-list-rec'); l.innerHTML = ''; if(!v) return; 
         categoryOrder.forEach(c => { if(activeCategories[c]) activeCategories[c].filter(i => i.toLowerCase().includes(v.toLowerCase())).forEach(m => { 
