@@ -172,19 +172,51 @@
     
     const dateKey = new Date().toLocaleDateString('en-CA');
     
-    onSnapshot(doc(db, "system_settings", "master_database"), (docSnap) => {
+    onSnapshot(doc(db, "daily_orders", dateKey), (docSnap) => {
+        // 🌟 V6: กัน Loop 100%
+        if (window.isLocalUpdate) return; 
+
         if (docSnap.exists()) {
-            activeCategories = docSnap.data().categories || {}; 
-            weightItems = docSnap.data().weightItems || []; 
-            window.itemMappings = docSnap.data().itemMappings || {};
-            localStorage.setItem('boy_v4_database', JSON.stringify(activeCategories)); 
-            localStorage.setItem('boy_v4_weights', JSON.stringify(weightItems)); 
-            localStorage.setItem('boy_v4_mappings', JSON.stringify(window.itemMappings));
+            const data = docSnap.data();
+            if(data.cart) { 
+                orderCart = data.cart; 
+                if(window.updateOrderTotal) window.updateOrderTotal(); 
+                if(window.renderOrder) window.renderOrder(); 
+            }
+            if(data.receiveQty) { 
+                receiveQty = data.receiveQty; 
+                receiveWgt = data.receiveWgt || {}; 
+                if(window.renderReceive) window.renderReceive(); 
+            }
+            if(data.revenue) {
+                revenue = data.revenue;
+                let cEl = document.getElementById('revenue-cash'); 
+                let tEl = document.getElementById('revenue-transfer');
+                if(cEl && document.activeElement !== cEl) cEl.value = revenue.cash || "";
+                if(tEl && document.activeElement !== tEl) tEl.value = revenue.transfer || "";
+            }
             
-            if(window.renderOrder) window.renderOrder(); 
-            if(window.renderReceive) window.renderReceive(); 
-            if(window.renderReturn) window.renderReturn();
-            if(document.getElementById('manage-modal').style.display === 'flex' && window.renderManageList) window.renderManageList();
+            returnQty = data.returnQty || {}; 
+            returnWgt = data.returnWgt || {};
+            
+            // บังคับ 4 รายการโชว์เสมอ
+            const stickyItems = ["ส้ม (โหล)", "อโวคาโด (กล่อง)", "แตงโม (กล่อง)", "สับปะรด (สกัด+ปั่น) (กล่อง)"];
+            let needSave = false;
+            stickyItems.forEach(i => { 
+                if(returnQty[i] === undefined) {
+                    returnQty[i] = 0; 
+                    needSave = true;
+                }
+            });
+            
+            if(window.renderReturn) window.renderReturn(); // 🌟 บังคับวาดหน้าจอเสมอ
+            if(needSave && window.saveDailyDataToCloud) window.saveDailyDataToCloud();
+            
+        } else {
+            // วันใหม่ สร้างกล่องใหม่และดึง 4 รายการมารอ
+            returnQty = { "ส้ม (โหล)":0, "อโวคาโด (กล่อง)":0, "แตงโม (กล่อง)":0, "สับปะรด (สกัด+ปั่น) (กล่อง)":0 };
+            if(window.renderReturn) window.renderReturn(); // 🌟 บังคับวาดหน้าจอให้ 4 รายการโผล่ทันที
+            if(window.saveDailyDataToCloud) window.saveDailyDataToCloud();
         }
     });
 
