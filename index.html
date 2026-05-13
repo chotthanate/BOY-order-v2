@@ -40,6 +40,8 @@
         .autocomplete-items { position: absolute; border: 1px solid #d4d4d4; z-index: 1000; top: 100%; left: 0; right: 0; max-height: 250px; overflow-y: auto; background: white; box-shadow: 0 8px 16px rgba(0,0,0,0.2); border-radius:0 0 8px 8px; }
         .autocomplete-items div { padding: 15px; cursor: pointer; border-bottom: 1px solid #eee; font-weight: bold; color: #333; }
         .sticky-cat-nav { position: sticky; top: -1px; background: white; z-index: 50; display: flex; gap: 8px; padding: 10px 0; overflow-x: auto; white-space: nowrap; border-bottom: 2px solid #eee; margin-bottom: 10px; -ms-overflow-style: none; scrollbar-width: none; }
+        .order-cat-nav { top: calc(106px + env(safe-area-inset-top)); z-index: 80; margin: -5px 0 10px; }
+        .order-category-title { scroll-margin-top: calc(145px + env(safe-area-inset-top)); }
         .cat-nav-btn { background: #f0f0f0; border: 1px solid #ddd; padding: 8px 15px; border-radius: 20px; font-size: 13px; font-weight: bold; color: #555; cursor: pointer; }
         .excel-table { width: 100%; border-collapse: collapse; background: #fff; font-size: 14px; border-radius: 8px; overflow: hidden; border: 1px solid #ddd; }
         .excel-table th { background: #f0f0f0; padding: 10px; text-align: left; border-bottom: 2px solid #ccc; color: #555; }
@@ -70,6 +72,7 @@
 </div>
 
 <div id="tab-order" class="tab-content active">
+    <div id="order-category-nav" class="sticky-cat-nav order-cat-nav"></div>
     <div id="order-container"></div>
 </div>
 
@@ -465,11 +468,18 @@
     }
 
     window.renderOrder = function() {
+        const nav = document.getElementById('order-category-nav');
         const container = document.getElementById('order-container');
+        nav.innerHTML = '';
         container.innerHTML = '';
-        window.categoryOrder.forEach(cat => {
+        window.categoryOrder.forEach((cat, ci) => {
             if(!window.activeCategories[cat] || window.activeCategories[cat].length === 0) return;
-            container.innerHTML += `<div class="category-title">${cat}</div>`;
+            const b = document.createElement('button');
+            b.className = 'cat-nav-btn';
+            b.innerText = cat.split(' ')[1] || cat;
+            b.onclick = () => document.getElementById(`order-cat-target-${ci}`).scrollIntoView({behavior:'smooth', block:'start'});
+            nav.appendChild(b);
+            container.innerHTML += `<div id="order-cat-target-${ci}" class="category-title order-category-title">${cat}</div>`;
             const grid = document.createElement('div');
             grid.className = 'grid';
             window.activeCategories[cat].forEach(item => {
@@ -718,8 +728,8 @@
         }
     }
 
-    window.showSuggestionsRec = function(v) { const l = document.getElementById('autocomplete-list-rec'); l.innerHTML = ''; if(!v) return; window.categoryOrder.forEach(c => { if(window.activeCategories[c]) window.activeCategories[c].filter(i => i.toLowerCase().includes(v.toLowerCase())).forEach(m => { const d = document.createElement('div'); d.innerText = m; d.onclick = () => { if (window.receiveQty[m] === undefined) window.receiveQty[m] = 0; scheduleAutoSave(); window.renderReceive(); l.innerHTML = ''; document.getElementById('receive-search').value = ''; setTimeout(() => { const target = document.getElementById(`item-rec-${m.replace(/'/g, "\\'")}`); if(target) target.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 150); }; l.appendChild(d); }); }); }
-    window.showSuggestions = function(v) { const l = document.getElementById('autocomplete-list'); l.innerHTML = ''; if(!v) return; window.categoryOrder.forEach(c => { if(window.activeCategories[c]) window.activeCategories[c].filter(i => i.toLowerCase().includes(v.toLowerCase())).forEach(m => { const d = document.createElement('div'); d.innerText = m; d.onclick = () => { if (window.returnQty[m] === undefined) window.returnQty[m] = 0; scheduleAutoSave(); window.renderReturn(); l.innerHTML = ''; document.getElementById('return-search').value = ''; setTimeout(() => { const target = document.getElementById(`item-ret-${m.replace(/'/g, "\\'")}`); if(target) target.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 150); }; l.appendChild(d); }); }); }
+    window.showSuggestionsRec = function(v) { const l = document.getElementById('autocomplete-list-rec'); l.innerHTML = ''; if(!v) return; const query = v.toLowerCase(); window.categoryOrder.forEach(c => { if(window.activeCategories[c]) window.activeCategories[c].filter(i => window.receiveQty[i] === undefined && i.toLowerCase().includes(query)).forEach(m => { const d = document.createElement('div'); d.innerText = m; d.onclick = () => { if (window.receiveQty[m] === undefined) window.receiveQty[m] = 0; scheduleAutoSave(); window.renderReceive(); l.innerHTML = ''; document.getElementById('receive-search').value = ''; setTimeout(() => { const target = document.getElementById(`item-rec-${m.replace(/'/g, "\\'")}`); if(target) target.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 150); }; l.appendChild(d); }); }); }
+    window.showSuggestions = function(v) { const l = document.getElementById('autocomplete-list'); l.innerHTML = ''; if(!v) return; const query = v.toLowerCase(); window.categoryOrder.forEach(c => { if(window.activeCategories[c]) window.activeCategories[c].filter(i => window.returnQty[i] === undefined && i.toLowerCase().includes(query)).forEach(m => { const d = document.createElement('div'); d.innerText = m; d.onclick = () => { if (window.returnQty[m] === undefined) window.returnQty[m] = 0; scheduleAutoSave(); window.renderReturn(); l.innerHTML = ''; document.getElementById('return-search').value = ''; setTimeout(() => { const target = document.getElementById(`item-ret-${m.replace(/'/g, "\\'")}`); if(target) target.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 150); }; l.appendChild(d); }); }); }
 
     window.onload = initApp;
 </script>
