@@ -175,7 +175,7 @@ function doPost(e) {
       }
 
       if (rows.length > 0) {
-        var startRow = 18;
+        var startRow = 5;
         var maxRows = Math.max(1, sheet.getLastRow() - startRow + 5);
         var values = sheet.getRange(startRow, 9, maxRows, 1).getValues();
         var targetRow = startRow;
