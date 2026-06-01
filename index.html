@@ -156,6 +156,17 @@
     </div>
 </div>
 
+<div class="modal" id="revenue-warning-modal">
+    <div class="modal-content">
+        <h2 style="margin:0 0 10px 0; color:var(--danger);">ยังไม่ได้กรอกรายได้</h2>
+        <div style="font-size:16px; line-height:1.5; margin-bottom:18px;">
+            ยังไม่ได้กรอกเงินสดหรือเงินโอน ต้องการกลับไปกรอกก่อนหรือดำเนินการต่อโดยไม่กรอกรายได้?
+        </div>
+        <button class="btn-main" style="background:var(--danger);" onclick="window.resolveRevenueWarning(false)">ยกเลิก กลับไปกรอก</button>
+        <button class="btn-main" style="background:#777;" onclick="window.resolveRevenueWarning(true)">ดำเนินการต่อ</button>
+    </div>
+</div>
+
 <div class="cart-bar" id="cart-bar">
     <div style="font-size: 18px; font-weight: bold;">รวม: <span id="total-qty" style="color:var(--primary);">0</span></div>
     <button style="background:var(--primary); color:white; border:none; padding:12px 25px; border-radius:25px; font-weight:bold;" onclick="window.openCart()">ดูสรุป / บันทึก</button>
@@ -610,6 +621,13 @@
         let finalData = {}; 
         let cashVal = document.getElementById('revenue-cash').value; 
         let transferVal = document.getElementById('revenue-transfer').value;
+        if (cashVal.trim() === "" && transferVal.trim() === "") {
+            const shouldContinue = await window.confirmMissingRevenue();
+            if (!shouldContinue) {
+                document.getElementById('revenue-cash').focus();
+                return;
+            }
+        }
         document.querySelectorAll('#return-container .swipe-card').forEach(card => {
             let itemName = card.querySelector('.item-id-name').innerText.trim();
             let v = window.weightItems.includes(itemName) ? (parseFloat(card.querySelector('.weight-input')?.value) || 0) : (parseInt(card.querySelector('.qty-input')?.value) || 0);
@@ -698,6 +716,19 @@
     window.openCart = function() { const l = document.getElementById('cart-list'); l.innerHTML = ''; window.categoryOrder.forEach(c => { if(!window.activeCategories[c]) return; const its = window.activeCategories[c].filter(i => window.orderCart[i] > 0); if(its.length > 0) { l.innerHTML += `<div style="font-weight:bold; color:green; margin:10px 0 5px;">${c}</div>`; its.forEach(i => l.innerHTML += `<div style="display:flex; justify-content:space-between; padding:5px; border-bottom:1px dashed #eee;"><span>${i}</span> <b>${window.orderCart[i]}</b></div>`); } }); document.getElementById('cart-modal').style.display = 'flex'; }
     window.closeCart = function() { document.getElementById('cart-modal').style.display = 'none'; }
     window.clearOrderCart = function() { if(confirm("ล้างตะกร้า?")) { window.orderCart = {}; scheduleAutoSave(); window.closeCart(); window.renderOrder(); } }
+    window.confirmMissingRevenue = function() {
+        return new Promise(resolve => {
+            window.revenueWarningResolver = resolve;
+            document.getElementById('revenue-warning-modal').style.display = 'flex';
+        });
+    }
+    window.resolveRevenueWarning = function(shouldContinue) {
+        document.getElementById('revenue-warning-modal').style.display = 'none';
+        if (window.revenueWarningResolver) {
+            window.revenueWarningResolver(shouldContinue);
+            window.revenueWarningResolver = null;
+        }
+    }
     
     window.openManageModal = function() { document.getElementById('manage-modal').style.display = 'flex'; window.renderManageList(); }
     window.closeManageModal = function() { document.getElementById('manage-modal').style.display = 'none'; }
