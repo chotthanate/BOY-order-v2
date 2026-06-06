@@ -1,3 +1,7 @@
+var USE_SHARED_DATABASE = true;
+var SHARED_DATABASE_WRITE_ENABLED = false;
+var SHARED_DATABASE_API_URL = "https://script.google.com/macros/s/AKfycbwLNcIbQzC30EhRAQQM2e7_WQysgepfPnyadJ6D5T5wE_eMhGPU9JKl_teDfPu7he6Z/exec";
+
 function doPost(e) {
   var lock = LockService.getScriptLock();
   if (!lock.tryLock(10000)) {
@@ -94,6 +98,16 @@ function doPost(e) {
     }
 
     if (action === 'loadDB') {
+      if (USE_SHARED_DATABASE) {
+        try {
+          var sharedLoad = sharedDatabaseCall_('shared_loadDB');
+          if (sharedLoad.database) configSheet.getRange("Z1").setValue(JSON.stringify(sharedLoad.database));
+          return json(sharedLoad);
+        } catch(sharedErr) {
+          // Fall back to the old Z1 database if the shared API is unavailable.
+        }
+      }
+
       var dbStr = configSheet.getRange("Z1").getValue() || '{}';
       var database = {};
       try {
@@ -104,7 +118,25 @@ function doPost(e) {
 
     if (action === 'saveDB') {
       var masterDatabase = normalizeDatabase(data.database || {});
+      if (data.database && Array.isArray(data.database.categoryOrder)) {
+        masterDatabase.categoryOrder = data.database.categoryOrder;
+      } else {
+        masterDatabase.categoryOrder = Object.keys(masterDatabase.categories || {});
+      }
       configSheet.getRange("Z1").setValue(JSON.stringify(masterDatabase));
+
+      if (USE_SHARED_DATABASE) {
+        if (!SHARED_DATABASE_WRITE_ENABLED) {
+          return json({
+            status: 'error',
+            message: 'Shared Database write is disabled. แก้รายการที่ชีท Database กลางก่อน แล้วกดอัปเดทในเว็บ'
+          });
+        }
+        var sharedSave = sharedDatabaseCall_('shared_saveDB', { database: masterDatabase });
+        if (sharedSave.database) configSheet.getRange("Z1").setValue(JSON.stringify(sharedSave.database));
+        return json(sharedSave);
+      }
+
       return json({ status: 'success', database: masterDatabase });
     }
 
@@ -220,4 +252,33 @@ function sendLine(message, token, userId) {
 
 function json(obj) {
   return ContentService.createTextOutput(JSON.stringify(obj)).setMimeType(ContentService.MimeType.JSON);
+}
+
+function sharedDatabaseCall_(action, payload) {
+  payload = payload || {};
+  var body = { action: action };
+  Object.keys(payload).forEach(function(key) {
+    body[key] = payload[key];
+  });
+
+  var response = UrlFetchApp.fetch(SHARED_DATABASE_API_URL, {
+    method: "post",
+    contentType: "text/plain;charset=utf-8",
+    payload: JSON.stringify(body),
+    muteHttpExceptions: true
+  });
+
+  var code = response.getResponseCode();
+  var text = response.getContentText() || "";
+  var data;
+  try {
+    data = JSON.parse(text);
+  } catch (err) {
+    throw new Error("Shared DB returned non-JSON response: " + text.substring(0, 120));
+  }
+
+  if (code < 200 || code >= 300 || String(data.status || "").toLowerCase() === "error") {
+    throw new Error(data.message || ("Shared DB HTTP " + code));
+  }
+  return data;
 }
