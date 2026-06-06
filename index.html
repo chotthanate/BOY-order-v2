@@ -185,8 +185,6 @@
 <script>
     // 🌐 ลิงก์ Apps Script
     const WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbwIWdfGNlh5x30IxBWzhp3ohv_rbRgQdJ28PTlTiNnm6iOB29sjbesni9TcWhq7nQFI/exec"; 
-    const USE_SHARED_DATABASE = true;
-    window.USE_SHARED_DATABASE = USE_SHARED_DATABASE;
 </script>
 
 <script>
@@ -212,7 +210,6 @@
     window.uniqueItemList = function(items) {
         return Array.from(new Set((items || []).map(window.cleanItemName).filter(Boolean)));
     }
-    window.categoryOrder = window.uniqueItemList(window.safeJsonParse(window.safeLocalStorageGet('boy_v4_category_order'), window.categoryOrder));
     window.getAllKnownItems = function() {
         let known = [];
         Object.keys(window.activeCategories || {}).forEach(cat => {
@@ -236,16 +233,7 @@
         window.safeLocalStorageSet('boy_v4_database', JSON.stringify(window.activeCategories));
         window.safeLocalStorageSet('boy_v4_weights', JSON.stringify(window.weightItems));
         window.safeLocalStorageSet('boy_v4_mappings', JSON.stringify(window.itemMappings));
-        window.safeLocalStorageSet('boy_v4_category_order', JSON.stringify(window.categoryOrder));
         window.safeLocalStorageSet('boy_v4_database_updated_at', String(window.databaseUpdatedAt || 0));
-    }
-    window.refreshCategorySelectOptions = function() {
-        const sel = document.getElementById('item-cat');
-        if (!sel) return;
-        const currentValue = sel.value;
-        sel.innerHTML = '';
-        window.categoryOrder.forEach(cat => { sel.innerHTML += `<option value="${cat}">${cat}</option>`; });
-        if (currentValue && window.categoryOrder.includes(currentValue)) sel.value = currentValue;
     }
     window.applyMasterDatabase = function(database, options = {}) {
         const incoming = database || {};
@@ -256,14 +244,10 @@
         if (!options.force && window.databaseUpdatedAt > 0 && incomingTimestamp === 0) return false;
         if (!options.force && incomingTimestamp > 0 && incomingTimestamp < window.databaseUpdatedAt) return false;
 
-        const incomingOrder = Array.isArray(incoming.categoryOrder) ? incoming.categoryOrder : [];
-        const nextOrder = window.uniqueItemList(incomingOrder.concat(Object.keys(categories))).filter(cat => categories[cat]);
-        if (nextOrder.length > 0) window.categoryOrder = nextOrder;
         window.activeCategories = categories;
         window.weightItems = incoming.weightItems || [];
         window.itemMappings = incoming.itemMappings || {};
         window.persistMasterDatabase(incoming.updatedAt || "");
-        window.refreshCategorySelectOptions();
         return true;
     }
     window.getBusinessDateKey = function(date = new Date()) {
@@ -313,7 +297,6 @@
     
     // โหลดการเปลี่ยนแปลงเมนูแบบเงียบๆ เบื้องหลัง
     onSnapshot(doc(db, "system_settings", "master_database"), (docSnap) => {
-        if (window.USE_SHARED_DATABASE) return;
         if (docSnap.exists()) {
             const dbData = docSnap.data() || {};
             const applied = window.applyMasterDatabase({
@@ -424,7 +407,9 @@
         document.getElementById('revenue-cash').value = window.revenue.cash || '';
         document.getElementById('revenue-transfer').value = window.revenue.transfer || '';
 
-        window.refreshCategorySelectOptions();
+        const sel = document.getElementById('item-cat');
+        sel.innerHTML = '';
+        window.categoryOrder.forEach(cat => { sel.innerHTML += `<option value="${cat}">${cat}</option>`; });
 
         // วาดหน้าจอทันที ไม่ต้องรอเน็ต
         window.renderOrder();
@@ -677,7 +662,6 @@
         window.normalizeWeightItems();
         const database = {
             categories: window.activeCategories,
-            categoryOrder: window.categoryOrder,
             weightItems: window.weightItems,
             itemMappings: window.itemMappings,
             updatedAt: new Date().toISOString()
