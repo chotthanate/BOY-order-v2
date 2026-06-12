@@ -113,6 +113,26 @@ function doPost(e) {
       return typeof num === "number" && !isNaN(num);
     }
 
+    function splitSheetItemName(rawName) {
+      var fullName = String(rawName || "").trim();
+      var parsed = { name: fullName, unit: "" };
+      var preservedSuffixes = {
+        "\u0e1d\u0e32\u0e0a\u0e21\u0e1e\u0e39": true,
+        "\u0e1d\u0e32\u0e41\u0e14\u0e07": true,
+        "\u0e1d\u0e32\u0e40\u0e02\u0e35\u0e22\u0e27": true,
+        "\u0e1d\u0e32\u0e21\u0e48\u0e27\u0e07": true
+      };
+      var match = fullName.match(/^(.*)\s*\(([^()]*)\)$/);
+      if (!match) return parsed;
+
+      var suffix = String(match[2] || "").trim();
+      if (preservedSuffixes[suffix]) return parsed;
+
+      parsed.name = String(match[1] || "").trim();
+      parsed.unit = suffix;
+      return parsed;
+    }
+
     // =========================
     // 🟢 โหมด ORDER (สั่งของ)
     // =========================
@@ -168,10 +188,8 @@ function doPost(e) {
         var value = parseFloat(items[k]);
         if (!isValidNumber(value) || value === 0) continue;
 
-        var name = k, unit = "";
-        var match = k.match(/(.*?)\s*\((.*?)\)$/);
-        if (match) { name = match[1].trim(); unit = match[2].trim(); }
-        rows.push([formattedDate, name, unit, (action === "return" ? -value : value)]);
+        var itemParts = splitSheetItemName(k);
+        rows.push([formattedDate, itemParts.name, itemParts.unit, (action === "return" ? -value : value)]);
       }
 
       if (rows.length > 0) {
