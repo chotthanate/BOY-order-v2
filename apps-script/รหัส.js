@@ -16,6 +16,14 @@ function doPost(e) {
     var data = JSON.parse(e.postData.contents || "{}");
     var action = data.action;
     var todayStr = Utilities.formatDate(new Date(), "Asia/Bangkok", "yyyy-MM-dd");
+    var orderStore = PropertiesService.getScriptProperties();
+    var pendingKey = 'boy_order_v2_pending';
+
+    if (action === 'loadPendingOrder') {
+      var pending = {};
+      try { pending = JSON.parse(orderStore.getProperty(pendingKey) || '{}'); } catch (ex) {}
+      return json({ status: 'success', pending: pending });
+    }
 
     // =========================
     // 🛠️ โหมดโหลดฉบับร่าง (ถ้าเปิดมือถือเครื่องอื่น)
@@ -136,12 +144,16 @@ function doPost(e) {
     // =========================
     // 🟢 โหมด ORDER (สั่งของ)
     // =========================
-    if (action === "order") {
-      if (!sheet) return json({ status: "error", message: "ไม่พบชีทเดือน " + currentMonth });
+    if (action === "order" || action === "recordOrder") {
       var lineToken = "4VEgaL31by4Jb2sl3DNv7r7rVG88J/KFwryrqwbSVmi+Qyo9NNj+aarfTXYbwFF2e4XkFqRgGAyYbhtJZl6/FeG04q28sUhMIc+lKvaBvpr2WbRNuu1Hs394jtvaSvhf35nLqYv6lQgnhkPI7UpLOQdB04t89/1O/w1cDnyilFU=";
       var targetId = "C12caad9659b713f06920389252e9e027";
       var cartData = data.qtyData || {};
       var categories = data.categories || {};
+      var orderId = String(data.orderId || '').trim();
+      if (!orderId) return json({ status: 'error', message: 'ไม่พบรหัสออเดอร์' });
+      var existing = {};
+      try { existing = JSON.parse(orderStore.getProperty(pendingKey) || '{}'); } catch (ex) {}
+      if (existing.id === orderId) return json({ status: 'success', pending: existing });
       var message = "📦 รายการสั่งของ Big C (" + Utilities.formatDate(new Date(), "Asia/Bangkok", "dd/MM/yyyy") + ")\n";
       var hasItem = false;
 
@@ -156,9 +168,14 @@ function doPost(e) {
         if (section) message += "\n" + cat + "\n" + section;
       }
 
-      if (hasItem) sendLine(message, lineToken, targetId);
-      configSheet.getRange("Z2").clearContent(); // ล้างร่าง
-      return json({ status: "success" });
+      if (!hasItem) return json({ status: 'error', message: 'ไม่มีสินค้าในตะกร้า' });
+      if (action === 'order') sendLine(message, lineToken, targetId);
+      var combined = {};
+      Object.keys(existing.qtyData || {}).forEach(function(item) { combined[item] = Number(existing.qtyData[item]) || 0; });
+      Object.keys(cartData).forEach(function(item) { if (Number(cartData[item]) > 0) combined[item] = (combined[item] || 0) + Number(cartData[item]); });
+      var confirmed = { id: orderId, date: todayStr, qtyData: combined, createdAt: new Date().toISOString(), mode: action === 'order' ? 'line' : 'copy' };
+      orderStore.setProperty(pendingKey, JSON.stringify(confirmed));
+      return json({ status: "success", pending: confirmed });
     }
 
     // =========================
@@ -207,7 +224,15 @@ function doPost(e) {
         sheet.getRange(targetRow, 9, rows.length, 4).setValues(rows);
       }
       
-      configSheet.getRange("Z2").clearContent(); // ล้างร่าง
+      if (action === 'receive' && data.orderId) {
+        var currentPending = {};
+        try { currentPending = JSON.parse(orderStore.getProperty(pendingKey) || '{}'); } catch (ex) {}
+        if (currentPending.id === data.orderId) {
+          (data.receivedItems || []).forEach(function(name) { delete currentPending.qtyData[name]; });
+          if (Object.keys(currentPending.qtyData).length) orderStore.setProperty(pendingKey, JSON.stringify(currentPending));
+          else orderStore.deleteProperty(pendingKey);
+        }
+      }
       return json({ status: "success" });
     }
 

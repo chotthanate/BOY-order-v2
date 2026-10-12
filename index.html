@@ -36,6 +36,8 @@
         .btn-plus { background: #E8F5E9; color: var(--primary); }
         .qty-input { width: 45px; text-align: center; font-size: 18px; font-weight: bold; color: var(--primary-dark); border: none; background: transparent; outline: none; }
         .weight-input { width: 100%; padding: 12px 10px; border: 1px solid #cfd8dc; border-radius: 6px; text-align: center; font-size: 16px; font-weight: bold; outline: none; background: #fff; }
+        .receive-check { width: 24px; height: 24px; accent-color: var(--primary); flex: none; margin: 0 12px 0 0; }
+        .receive-meta { display: block; color: #6b756c; font-size: 12px; font-weight: 400; margin-top: 3px; }
         .swipe-container { position: relative; border-radius: 12px; background: var(--danger); overflow: hidden; margin-bottom: 10px; touch-action: pan-y; }
         .swipe-background { position: absolute; top: 0; right: 0; bottom: 0; width: 80px; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; z-index: 1; }
         .swipe-card { background: var(--card-bg); z-index: 2; position: relative; width: 100%; border: 1px solid #eee; border-radius: 12px; transition: transform 0.2s; }
@@ -288,6 +290,9 @@
     window.orderCart = {}; 
     window.receiveQty = {}; 
     window.receiveWgt = {}; 
+    window.receiveChecked = {};
+    window.receiveOrderedQty = {};
+    window.receiveOrderId = '';
     window.returnQty = {}; 
     window.returnWgt = {};
     window.revenue = { cash: "", transfer: "" };
@@ -358,6 +363,10 @@
         window.orderCart = draft.cart || {};
         window.receiveQty = draft.receiveQty || {};
         window.receiveWgt = draft.receiveWgt || {};
+        window.receiveChecked = draft.receiveChecked || {};
+        if (!draft.receiveChecked) Object.keys(window.receiveQty).forEach(item => { window.receiveChecked[item] = true; });
+        window.receiveOrderedQty = draft.receiveOrderedQty || {};
+        window.receiveOrderId = draft.receiveOrderId || '';
         window.returnQty = draft.returnQty || {};
         window.returnWgt = draft.returnWgt || {};
         window.revenue = draft.revenue || {cash:"", transfer:""};
@@ -376,6 +385,9 @@
             cart: window.orderCart, 
             receiveQty: window.receiveQty, 
             receiveWgt: window.receiveWgt, 
+            receiveChecked: window.receiveChecked,
+            receiveOrderedQty: window.receiveOrderedQty,
+            receiveOrderId: window.receiveOrderId,
             returnQty: window.returnQty, 
             returnWgt: window.returnWgt, 
             revenue: window.revenue,
@@ -399,7 +411,12 @@
     function initApp() {
         window.normalizeWeightItems();
         const dateKey = window.getBusinessDateKey();
-        const localBackup = window.safeLocalStorageGet('boy_draft_' + dateKey);
+        const [year, month, day] = dateKey.split('-').map(Number);
+        const yesterdayKey = new Date(Date.UTC(year, month - 1, day - 1)).toISOString().slice(0, 10);
+        const todayBackup = window.safeLocalStorageGet('boy_draft_' + dateKey);
+        const previousBackup = window.safeLocalStorageGet('boy_draft_' + yesterdayKey);
+        const previousDraft = window.safeJsonParse(previousBackup, {});
+        const localBackup = todayBackup || ((Object.values(previousDraft.cart || {}).some(q => Number(q) > 0) || Object.keys(previousDraft.receiveQty || {}).length) ? previousBackup : null);
         let localDraftTimestamp = 0;
 
         // งัดข้อมูลจากความจำมือถือขึ้นมาโชว์ทันที
@@ -410,6 +427,7 @@
                 localDraftTimestamp = getDraftTimestamp(bData);
             } catch(e) {}
         }
+        if (!todayBackup && localBackup) scheduleAutoSave();
 
         // เสก 4 รายการคืนของ
         window.VIP_ITEMS.forEach(i => { if (window.returnQty[i] === undefined) window.returnQty[i] = 0; });
@@ -440,12 +458,20 @@
             const serverDraft = res.draft || {};
             const hasServerDraft = Object.keys(serverDraft).length > 0;
             const serverDraftTimestamp = getDraftTimestamp(serverDraft);
-            if (hasServerDraft && (!localBackup || serverDraftTimestamp > localDraftTimestamp)) {
+            const hasLocalCart = Object.values(window.orderCart).some(q => Number(q) > 0);
+            const hasServerCart = Object.values(serverDraft.cart || {}).some(q => Number(q) > 0);
+            const latestLocal = window.safeJsonParse(window.safeLocalStorageGet('boy_draft_' + dateKey), {});
+            if (hasServerDraft && serverDraftTimestamp > Math.max(localDraftTimestamp, getDraftTimestamp(latestLocal)) && !(hasLocalCart && !hasServerCart)) {
                 hydrateDraft(serverDraft);
                 window.safeLocalStorageSet('boy_draft_' + dateKey, JSON.stringify(serverDraft));
                 window.renderOrder(); window.renderReceive(); window.renderReturn();
             }
         }).catch(e => console.log("Load draft skipped"));
+        apiCall('loadPendingOrder').then(res => {
+            const pending = res.pending || {};
+            if (!pending.id || !pending.qtyData || window.receiveOrderId === pending.id) return;
+            window.applyPendingOrder(pending);
+        }).catch(e => console.log('Pending order load skipped'));
     }
 
     // ==========================================
@@ -531,6 +557,23 @@
         window.updateOrderTotal();
     }
 
+    window.applyPendingOrder = function(pending) {
+        if (!pending?.id || !pending.qtyData) return;
+        window.receiveOrderId = pending.id;
+        Object.entries(pending.qtyData).forEach(([item, qty]) => {
+            if (window.receiveQty[item] === undefined) window.receiveQty[item] = window.weightItems.includes(item) ? 0 : Number(qty);
+            window.receiveOrderedQty[item] = qty;
+            if (window.receiveChecked[item] === undefined) window.receiveChecked[item] = false;
+        });
+        scheduleAutoSave();
+        window.renderReceive();
+    }
+
+    window.setReceiveChecked = function(item, checked) {
+        window.receiveChecked[item] = checked;
+        scheduleAutoSave();
+    }
+
     window.renderReceive = function() {
         const container = document.getElementById('receive-container');
         container.innerHTML = '';
@@ -548,7 +591,7 @@
                         <div class="swipe-background">🗑️</div>
                         <div class="swipe-card" ontouchstart="window.swipeStart(event)" ontouchmove="window.swipeMove(event)" ontouchend="window.swipeEnd(event,'${safeItem}','receive')">
                             <div style="display:flex; justify-content:space-between; align-items:center; padding:12px;">
-                                <span class="item-id-name" style="font-weight:bold;">${item}</span>
+                                <label style="display:flex; align-items:center; min-width:0; flex:1;"><input type="checkbox" class="receive-check" ${window.receiveChecked[item] ? 'checked' : ''} onchange="window.setReceiveChecked('${safeItem}',this.checked)"><span class="item-id-name" style="font-weight:bold;">${item}${window.receiveOrderedQty[item] !== undefined ? `<span class="receive-meta">สั่งไว้ ${window.receiveOrderedQty[item]} · เช็กเมื่อได้รับจริง</span>` : ''}</span></label>
                                 ${window.weightItems.includes(item) ? `<input type="number" class="weight-input" style="width:120px" placeholder="กิโลกรัม" value="${w}" oninput="window.localWgt('${safeItem}',this.value,'receive')" onclick="this.select()">` : `<div class="controls"><button class="btn-minus" onclick="window.updateRecQty('${safeItem}',-1)">-</button><input type="number" id="qty-rec-${safeItem}" class="qty-input" value="${q}" oninput="window.manualQty('${safeItem}',this.value,'receive')" onclick="this.select()"><button class="btn-plus" onclick="window.updateRecQty('${safeItem}', 1)">+</button></div>`}
                             </div>
                         </div>
@@ -608,30 +651,61 @@
     // ==========================================
     let isSubmitting = false;
 
-    window.saveAndSend = async function() {
+    window.submitOrder = async function(mode) {
         if (isSubmitting) return;
-        isSubmitting = true; document.getElementById('btn-submit-order').disabled = true; window.showLoader("กำลังส่งออเดอร์...");
+        const qtyData = Object.fromEntries(Object.entries(window.orderCart).filter(([, qty]) => Number(qty) > 0));
+        const count = Object.keys(qtyData).length;
+        if (!count) return alert('ไม่มีสินค้าในตะกร้า');
+        const verb = mode === 'copy' ? 'คัดลอกข้อความส่งเอง' : 'ส่งเข้า LINE';
+        if (!confirm(`ยืนยัน${verb} ${count} รายการ?\nหลังยืนยัน รายการจะอยู่ในหน้ารับสินค้าจนกว่าจะเช็กรับจริง`)) return;
+        if (mode === 'copy') {
+            const text = window.buildOrderText(qtyData);
+            const textArea = document.createElement('textarea');
+            textArea.value = text;
+            document.body.appendChild(textArea);
+            textArea.select();
+            const copied = document.execCommand('copy');
+            textArea.remove();
+            if (!copied) return alert('คัดลอกไม่สำเร็จ กรุณาลองใหม่');
+        }
+        const orderId = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+        isSubmitting = true;
+        document.getElementById('btn-submit-order').disabled = true;
+        clearTimeout(autoSaveTimer);
+        window.showLoader(mode === 'copy' ? 'กำลังบันทึกรายการรอรับ...' : 'กำลังส่งออเดอร์...');
         try {
-            await apiCall('order', { qtyData: window.orderCart, categories: window.activeCategories });
-            window.orderCart = {}; scheduleAutoSave();
-            alert("✅ ส่งออเดอร์สำเร็จ!"); window.switchTab('receive'); window.closeCart(); window.renderOrder();
-        } catch(e) { alert("❌ " + e.message); } finally { isSubmitting = false; document.getElementById('btn-submit-order').disabled = false; window.hideLoader(); }
+            const result = await apiCall(mode === 'copy' ? 'recordOrder' : 'order', { orderId, qtyData, categories: window.activeCategories });
+            window.applyPendingOrder(result.pending || { id: orderId, qtyData });
+            Object.keys(qtyData).forEach(item => { if (window.orderCart[item] === qtyData[item]) delete window.orderCart[item]; });
+            scheduleAutoSave();
+            window.switchTab('receive'); window.closeCart(); window.renderOrder();
+            alert(mode === 'copy' ? '✅ คัดลอกและบันทึกรายการรอรับแล้ว นำข้อความไปวางใน LINE ได้เลย' : '✅ ส่ง LINE แล้ว รายการอยู่ในหน้ารับสินค้า');
+        } catch(e) {
+            alert((mode === 'copy' ? '📋 คัดลอกแล้ว แต่บันทึกรายการรอรับไม่สำเร็จ ตะกร้ายังอยู่ กรุณาลองอีกครั้ง: ' : '❌ ส่งออเดอร์ไม่สำเร็จ ตะกร้ายังอยู่: ') + e.message);
+        } finally {
+            isSubmitting = false; document.getElementById('btn-submit-order').disabled = false; window.hideLoader();
+        }
     }
+    window.saveAndSend = function() { return window.submitOrder('line'); }
 
     window.confirmReceive = async function() {
         if (isSubmitting) return;
-        let finalData = {}; let hasData = false;
+        let finalData = {}; let receivedItems = []; let hasData = false; let missingAmount = false;
         document.querySelectorAll('#receive-container .swipe-card').forEach(card => {
-            let itemName = card.querySelector('.item-id-name').innerText.trim();
+            let itemName = card.querySelector('.item-id-name').firstChild.textContent.trim();
+            if (!window.receiveChecked[itemName]) return;
             let v = window.weightItems.includes(itemName) ? (parseFloat(card.querySelector('.weight-input')?.value) || 0) : (parseInt(card.querySelector('.qty-input')?.value) || 0);
-            if (v > 0) { finalData[window.itemMappings[itemName] || itemName] = v; hasData = true; }
+            if (v > 0) { const target = window.itemMappings[itemName] || itemName; finalData[target] = (finalData[target] || 0) + v; receivedItems.push(itemName); hasData = true; }
+            else missingAmount = true;
         });
-        if(!hasData) return alert("กรุณาใส่จำนวนรับเข้า");
+        if (missingAmount) return alert('กรุณาใส่จำนวนรับเข้าของรายการที่เช็ก');
+        if(!hasData) return alert("กรุณาเช็กรายการที่ได้รับและใส่จำนวนรับเข้า");
         
         isSubmitting = true; document.getElementById('btn-submit-receive').disabled = true; window.showLoader("กำลังบันทึก...");
         try {
-            await apiCall('receive', { qtyData: finalData });
-            window.receiveQty = {}; window.receiveWgt = {}; scheduleAutoSave();
+            await apiCall('receive', { qtyData: finalData, receivedItems, orderId: window.receiveOrderId });
+            receivedItems.forEach(item => { delete window.receiveQty[item]; delete window.receiveWgt[item]; delete window.receiveChecked[item]; delete window.receiveOrderedQty[item]; });
+            scheduleAutoSave();
             alert("✅ บันทึกรับสินค้าสำเร็จ!"); window.switchTab('return'); window.renderReceive();
         } catch(e) { alert("❌ " + e.message); } finally { isSubmitting = false; document.getElementById('btn-submit-receive').disabled = false; window.hideLoader(); }
     }
@@ -730,7 +804,8 @@
     // ฟังก์ชันย่อยอื่นๆ (UI/UX)
     window.updateOrderTotal = function() { let t = document.getElementById('total-qty'); if(t) t.innerText = Object.values(window.orderCart).reduce((a, b) => a + b, 0); }
     window.switchTab = function(id) { document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active')); document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active')); document.getElementById(`tab-${id}`).classList.add('active'); document.getElementById(`tab-btn-${id}`).classList.add('active'); document.getElementById('cart-bar').style.display = id === 'order' ? 'flex' : 'none'; window.scrollTo(0, 0); }
-    window.copyOrderText = function() { const now = new Date(); const dateThai = now.getDate() + "/" + (now.getMonth() + 1) + "/" + (now.getFullYear() + 543); let text = `📦 รายการสั่งของ Big C (${dateThai})\n`; let hasItem = false; window.categoryOrder.forEach(cat => { if(!window.activeCategories[cat]) return; let catContent = ""; window.activeCategories[cat].forEach(item => { if (window.orderCart[item] > 0) { catContent += `- ${item} x ${window.orderCart[item]}\n`; hasItem = true; } }); if (catContent !== "") text += `\n${cat}\n${catContent}`; }); if (!hasItem) return alert("ไม่มีสินค้าในตะกร้า"); var textArea = document.createElement("textarea"); textArea.value = text; document.body.appendChild(textArea); textArea.select(); document.execCommand('copy'); document.body.removeChild(textArea); alert("📋 คัดลอกแล้ว นำไปวางใน LINE ได้เลยครับ"); };
+    window.buildOrderText = function(qtyData) { const now = new Date(); const dateThai = now.getDate() + "/" + (now.getMonth() + 1) + "/" + (now.getFullYear() + 543); let text = `📦 รายการสั่งของ Big C (${dateThai})\n`; window.categoryOrder.forEach(cat => { if(!window.activeCategories[cat]) return; let catContent = ""; window.activeCategories[cat].forEach(item => { if (qtyData[item] > 0) catContent += `- ${item} x ${qtyData[item]}\n`; }); if (catContent) text += `\n${cat}\n${catContent}`; }); return text; };
+    window.copyOrderText = function() { return window.submitOrder('copy'); };
     window.showLoader = function(text) { document.getElementById('loader-msg').innerText = text; document.getElementById('cute-loader').style.display = 'flex'; }
     window.hideLoader = function() { document.getElementById('cute-loader').style.display = 'none'; }
     window.openCart = function() { const l = document.getElementById('cart-list'); l.innerHTML = ''; window.categoryOrder.forEach(c => { if(!window.activeCategories[c]) return; const its = window.activeCategories[c].filter(i => window.orderCart[i] > 0); if(its.length > 0) { l.innerHTML += `<div style="font-weight:bold; color:green; margin:10px 0 5px;">${c}</div>`; its.forEach(i => l.innerHTML += `<div style="display:flex; justify-content:space-between; padding:5px; border-bottom:1px dashed #eee;"><span>${i}</span> <b>${window.orderCart[i]}</b></div>`); } }); document.getElementById('cart-modal').style.display = 'flex'; }
@@ -767,6 +842,8 @@
             if(type==='receive') {
                 delete window.receiveQty[item];
                 delete window.receiveWgt[item];
+                delete window.receiveChecked[item];
+                delete window.receiveOrderedQty[item];
                 window.renderReceive();
             } else {
                 delete window.returnQty[item];
@@ -779,7 +856,7 @@
         }
     }
 
-    window.showSuggestionsRec = function(v) { const l = document.getElementById('autocomplete-list-rec'); l.innerHTML = ''; if(!v) return; const query = v.toLowerCase(); window.categoryOrder.forEach(c => { if(window.activeCategories[c]) window.activeCategories[c].filter(i => window.receiveQty[i] === undefined && i.toLowerCase().includes(query)).forEach(m => { const d = document.createElement('div'); d.innerText = m; d.onclick = () => { if (window.receiveQty[m] === undefined) window.receiveQty[m] = 0; scheduleAutoSave(); window.renderReceive(); l.innerHTML = ''; document.getElementById('receive-search').value = ''; setTimeout(() => { const target = document.getElementById(`item-rec-${m.replace(/'/g, "\\'")}`); if(target) target.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 150); }; l.appendChild(d); }); }); }
+    window.showSuggestionsRec = function(v) { const l = document.getElementById('autocomplete-list-rec'); l.innerHTML = ''; if(!v) return; const query = v.toLowerCase(); window.categoryOrder.forEach(c => { if(window.activeCategories[c]) window.activeCategories[c].filter(i => window.receiveQty[i] === undefined && i.toLowerCase().includes(query)).forEach(m => { const d = document.createElement('div'); d.innerText = m; d.onclick = () => { if (window.receiveQty[m] === undefined) window.receiveQty[m] = 0; window.receiveChecked[m] = true; scheduleAutoSave(); window.renderReceive(); l.innerHTML = ''; document.getElementById('receive-search').value = ''; setTimeout(() => { const target = document.getElementById(`item-rec-${m.replace(/'/g, "\\'")}`); if(target) target.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 150); }; l.appendChild(d); }); }); }
     window.showSuggestions = function(v) { const l = document.getElementById('autocomplete-list'); l.innerHTML = ''; if(!v) return; const query = v.toLowerCase(); window.categoryOrder.forEach(c => { if(window.activeCategories[c]) window.activeCategories[c].filter(i => window.returnQty[i] === undefined && i.toLowerCase().includes(query)).forEach(m => { const d = document.createElement('div'); d.innerText = m; d.onclick = () => { if (window.returnQty[m] === undefined) window.returnQty[m] = 0; scheduleAutoSave(); window.renderReturn(); l.innerHTML = ''; document.getElementById('return-search').value = ''; setTimeout(() => { const target = document.getElementById(`item-ret-${m.replace(/'/g, "\\'")}`); if(target) target.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 150); }; l.appendChild(d); }); }); }
 
     window.onload = initApp;
