@@ -28,7 +28,8 @@ test('unsent iPhone draft survives update; confirmation moves copied order to re
       localStorage.setItem('boy_v4_database', JSON.stringify({ '📦 บรรจุภัณฑ์': ['ขนมปัง A'] }));
       localStorage.setItem('boy_draft_' + dateKey, JSON.stringify({ cart: { 'ขนมปัง A': 3 }, receiveQty: {}, receiveWgt: {}, returnQty: {}, returnWgt: {}, revenue: {}, timestamp: new Date().toISOString(), date: dateKey }));
     });
-    page.on('dialog', dialog => dialog.accept());
+    let acceptDialogs = true;
+    page.on('dialog', dialog => acceptDialogs ? dialog.accept() : dialog.dismiss());
     await page.goto(pathToFileURL(path.join(__dirname, '../index.html')).href);
     await page.waitForFunction(() => window.orderCart['ขนมปัง A'] === 3);
     assert.equal(await page.evaluate(() => window.orderCart['ขนมปัง A']), 3);
@@ -40,6 +41,21 @@ test('unsent iPhone draft survives update; confirmation moves copied order to re
     await page.reload();
     await page.waitForFunction(() => window.receiveQty['ขนมปัง A'] === 3);
     assert.equal(await page.evaluate(() => window.receiveChecked['ขนมปัง A']), false);
+    acceptDialogs = false;
+    await page.evaluate(() => {
+      const card = document.querySelector('#receive-container .swipe-card');
+      window.swipeStart({ touches: [{ clientX: 200 }], currentTarget: card });
+      window.swipeEnd({ changedTouches: [{ clientX: 100 }], currentTarget: card }, 'ขนมปัง A', 'receive');
+    });
+    assert.equal(await page.evaluate(() => window.receiveQty['ขนมปัง A']), 3);
+    assert.equal(await page.locator('#receive-container .swipe-card').count(), 1);
+    acceptDialogs = true;
+    await page.evaluate(() => {
+      const card = document.querySelector('#receive-container .swipe-card');
+      window.swipeStart({ touches: [{ clientX: 200 }], currentTarget: card });
+      window.swipeEnd({ changedTouches: [{ clientX: 100 }], currentTarget: card }, 'ขนมปัง A', 'receive');
+    });
+    assert.equal(await page.evaluate(() => window.receiveQty['ขนมปัง A']), undefined);
   } finally {
     await browser.close();
   }

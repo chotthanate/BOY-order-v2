@@ -839,6 +839,10 @@
         let dX = startX - e.changedTouches[0].clientX;
         e.currentTarget.style.transition = 'transform 0.3s ease';
         if (dX > 70) {
+            if (!confirm(`ยืนยันลบ "${item}" ออกจากรายการ${type === 'receive' ? 'รับสินค้า' : 'คืนสินค้า'}?`)) {
+                e.currentTarget.style.transform = 'translateX(0)';
+                return;
+            }
             if(type==='receive') {
                 delete window.receiveQty[item];
                 delete window.receiveWgt[item];
